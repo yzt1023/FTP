@@ -6,9 +6,9 @@
 package cn.edu.shu.client.ui.category;
 
 import cn.edu.shu.client.ftp.FTPFile;
-import cn.edu.shu.client.util.Helper;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -64,7 +64,8 @@ public class RemoteTableModel extends AbstractTableModel {
             if (newName.equals("")) {
                 MessageUtils.showErrorMessage( Constants.EMPTY_FILENAME, Constants.RENAME_FILE_TITLE);
             } else if (!file.getName().equals(newName)) {
-                String newPath = categoryPane.getCurrentFile().getPath() + Constants.SEPARATOR + newName;
+                String parentPath = categoryPane.getCurrentFile().getPath();
+                String newPath = Utils.getInstance().getPath(parentPath, newName);
                 if(categoryPane.renameFile(file.getPath(), newPath)){
                     file.setName(newName);
                     file.setPath(newPath);
@@ -115,7 +116,7 @@ public class RemoteTableModel extends AbstractTableModel {
                 sortFiles[j--] = file;
         }
         j = files.length - 1;
-        Helper.reverse(sortFiles, i, j);
+        Utils.getInstance().reverse(sortFiles, i, j);
         files = sortFiles;
     }
 

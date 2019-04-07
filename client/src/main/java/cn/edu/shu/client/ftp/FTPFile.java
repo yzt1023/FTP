@@ -1,7 +1,7 @@
 package cn.edu.shu.client.ftp;
 
 import cn.edu.shu.common.util.Utils;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
 
 import javax.swing.*;
 import java.util.Date;
@@ -64,12 +64,12 @@ public class FTPFile {
 
     public void setType(String type) {
         this.type = type;
-        if(type.equals(Constants.TYPE_DIR) || type.equals(Constants.TYPE_CDIR) || type.equals(Constants.TYPE_PDIR)) {
+        if(type.equals(Constants.FILE_FOLDER) || type.equals(Constants.SYSTEM_FOLDER)) {
             isDirectory = true;
-            icon = new ImageIcon(Utils.getResourcePath(getClass(), "folder_icon.png"));
+            icon = new ImageIcon(Utils.getInstance().getResourcePath(getClass(), "folder_icon.png"));
         }else{
             isDirectory = false;
-            icon = new ImageIcon(Utils.getResourcePath(getClass(), "file_icon.png"));
+            icon = new ImageIcon(Utils.getInstance().getResourcePath(getClass(), "file_icon.png"));
         }
     }
 

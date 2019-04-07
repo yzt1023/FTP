@@ -3,18 +3,24 @@
  * Copyright (c) 2018 - 2019. All Rights Reserved.
  */
 
-package cn.edu.shu.client.util;
+package cn.edu.shu.common.util;
 
 public interface Constants {
-    String TEMP_DIR = "java.io.tmpdir";
+    String TEMP_DIR = System.getProperty("java.io.tmpdir");
+    String LINE_SEPARATOR = System.getProperty("line.separator");
+    byte[] EOL = LINE_SEPARATOR.getBytes();
+    String NET_EOL = "\r\n";
     String ENCRYPTION_AES = "AES";
     String ANONYMOUS_USER = "anonymous";
-    int DEFAULT_PORT = 21;
+    int DEFAULT_PORT = 2121;
+    String DEFAULT_IP = "127.0.0.1";
     int TIME_OUT = 500;
     String DATE_PATTERN = "yyyyMMddHHmm";
-    String KEY_MODIFY = "modify";
-    String KEY_SIZE = "size";
-    String KEY_TYPE = "type";
+    String KEY_MODIFY = "modify=";
+    String KEY_SIZE = "size=";
+    String KEY_TYPE = "type=";
+    String FILE_FOLDER = "File folder";
+    String SYSTEM_FOLDER = "System Folder";
     String TYPE_DIR = "dir";
     String TYPE_CDIR = "cdir";
     String TYPE_PDIR = "pdir";
@@ -23,7 +29,7 @@ public interface Constants {
     int KB = 1024;
     // file operation
     String PATH_NOT_EXISTS = "The specified path does not exist!";
-    String FILE_EXISTS = "This file name has already existed!";
+    String FILE_EXISTS = "This file name has already existed in the exact path!";
     String FILE_OPEN_FAILED = "Fail to open the file!";
     String FILE_DELETE_FAILED = "Fail to delete the file!";
     String FILE_RENAME_FAILED = "Rename failed!";
@@ -45,6 +51,7 @@ public interface Constants {
     String CONNECT_FAILED = "Unable to connect to the specified server!";
     String RESPONSE_ERROR = "Read response failed!";
     String RECONNECT_FAILED = "Reconnect failed!";
+    String PASSWORD_DIFFERENT = "The two passwords entered are different";
     // transfer task state
     String STATE_WAITING = "WAITING";
     String STATE_PROCESSING = "PROCESSING";

@@ -6,13 +6,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class LogPane extends JPanel implements Logger {
+public class MsgPane extends JPanel implements MsgListener {
 
     private JTextArea txtLog;
     private JScrollPane scrollPane;
     private JPopupMenu popupMenu;
 
-    public LogPane(){
+    public MsgPane(){
         super();
         initComponents();
     }
@@ -48,8 +48,7 @@ public class LogPane extends JPanel implements Logger {
         layout.setHorizontalGroup(layout.createSequentialGroup().addContainerGap().addComponent(scrollPane).addContainerGap());
     }
 
-    public void log(String message) {
-        txtLog.append(message + "\n");
-        txtLog.paintImmediately(txtLog.getBounds());
+    public void println(String message) {
+        txtLog.append(message + "\r\n");
     }
 }

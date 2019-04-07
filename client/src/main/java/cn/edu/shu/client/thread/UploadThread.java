@@ -9,7 +9,10 @@ import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.client.ftp.FTPFile;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.bean.DataType;
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
+import org.apache.log4j.Logger;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -22,6 +25,8 @@ public class UploadThread extends Thread {
     private FTPClient ftpClient;
     private TransferListener listener;
     private FileSystemView fileSystemView = FileSystemView.getFileSystemView();
+    private Utils utils = Utils.getInstance();
+    private Logger logger = Logger.getLogger(getClass());
 
     public UploadThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener) {
         this.queue = queue;
@@ -46,7 +51,7 @@ public class UploadThread extends Thread {
                         else
                             result = uploadFile(task);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error(e.getMessage(), e);
                     }finally {
                         if (result)
                             task.setState(Constants.STATE_SUCCESS);
@@ -56,7 +61,7 @@ public class UploadThread extends Thread {
                     }
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
     }
@@ -65,11 +70,11 @@ public class UploadThread extends Thread {
         File file = task.getFile();
         FTPFile ftpFile = task.getFtpFile();
         File[] files = fileSystemView.getFiles(file, false);
-        task.setSize(files.length);
+        task.setSize(files.length);// TODO: 4/6/2019 after setting size of folder, the task table should be refreshed
         if(!ftpClient.makeDirectory(ftpFile.getPath()))
             return false;
         ftpFile.setLastChanged(new Date());
-        ftpFile.setType(Constants.TYPE_DIR);
+        ftpFile.setType(fileSystemView.getSystemTypeDescription(file));
         ftpFile.setName(file.getName());
         for(int i = 0; i < files.length; i++){
             boolean success;
@@ -94,21 +99,29 @@ public class UploadThread extends Thread {
         if (outputStream == null)
             return false;
         ftpFile.setLastChanged(new Date());
-        ftpFile.setType(Constants.TYPE_FILE);
+        ftpFile.setType(fileSystemView.getSystemTypeDescription(file));
         ftpFile.setSize(file.length());
         ftpFile.setName(file.getName());
         BufferedOutputStream out = new BufferedOutputStream(outputStream);
         FileInputStream in = new FileInputStream(file);
         byte[] bytes = new byte[Constants.KB];
         int len, read = 0;
+        boolean lastWasCR = false;
         while ((len = in.read(bytes)) != -1) {
-            out.write(bytes, 0, len);
+            if(ftpClient.getDataType() == DataType.BINARY)
+                out.write(bytes, 0, len);
+            else {
+                for(byte b : bytes){
+                    lastWasCR = utils.toNetWrite(lastWasCR, out, b);
+                }
+            }
             task.setProgress(++read);
             listener.notifyProgress(task);
         }
+        out.flush();
+        out.close();
         in.close();
         ftpClient.readReply();
-        ftpClient.destroyDataConnect();
         return true;
     }
 
@@ -138,12 +151,20 @@ public class UploadThread extends Thread {
         FileInputStream in = new FileInputStream(file);
         byte[] bytes = new byte[Constants.KB];
         int len;
+        boolean lastWasCR = false;
         while((len = in.read(bytes)) != -1){
-            out.write(bytes, 0, len);
+            if(ftpClient.getDataType() == DataType.BINARY)
+                out.write(bytes, 0, len);
+            else {
+                for(byte b : bytes){
+                    lastWasCR = utils.toNetWrite(lastWasCR, out, b);
+                }
+            }
         }
+        out.flush();
+        out.close();
         in.close();
         ftpClient.readReply();
-        ftpClient.destroyDataConnect();
         return true;
     }
 }

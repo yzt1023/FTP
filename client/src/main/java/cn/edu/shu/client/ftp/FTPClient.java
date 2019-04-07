@@ -5,28 +5,30 @@
 
 package cn.edu.shu.client.ftp;
 
-import cn.edu.shu.client.util.Helper;
-import cn.edu.shu.common.log.Logger;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.bean.DataType;
+import cn.edu.shu.common.ftp.FTPCommand;
+import cn.edu.shu.common.ftp.FTPReplyCode;
+import cn.edu.shu.common.log.MsgListener;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
+import cn.edu.shu.common.util.Utils;
+import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.StringTokenizer;
-
 
 public class FTPClient {
+    private Utils utils = Utils.getInstance();
     private String currentPath;
     private boolean passiveMode = true;
     private boolean secureMode = false;
     private long restartOffset;
-    private String type;
+    private DataType dataType;
     private String encoding;
-    // server info
+    // server info for reconnect
     private String host;
     private int port;
     private String username;
@@ -35,103 +37,107 @@ public class FTPClient {
     private Socket controlSocket;
     private PrintWriter controlWriter;
     private BufferedReader controlReader;
-    // data connection
-    private Socket dataSocket;
-    private ServerSocket serverSocket;
-    private OutputStream dataWriter;
-    private InputStream dataReader;
     private String response;
 
-    private Logger logger;
-
-    public FTPClient(Logger logger) {
-        this.logger = logger;
-        this.type = FTPCommands.TYPE_I;
+    private MsgListener msgListener;
+    private Logger logger = Logger.getLogger(getClass());
+    
+    public FTPClient(MsgListener msgListener) {
+        this.msgListener = msgListener;
+        this.dataType = DataType.BINARY;
         this.restartOffset = 0L;
-        this.encoding = "ISO8859_1";
+        this.encoding = "UTF-8";
     }
 
-    public synchronized boolean connect(String host) {
-        return connect(host, Constants.DEFAULT_PORT);
-    }
-
-    public synchronized boolean connect(String host, int port) {
-        return connect(host, port, Constants.ANONYMOUS_USER, "");
-    }
-
-    public synchronized boolean connect(String host, int port, String username, String password) {
+    public boolean connect(String host, int port) {
         try {
             controlSocket = new Socket(host, port);
             controlSocket.setKeepAlive(true);
             controlSocket.setTcpNoDelay(true);
             controlReader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream(), encoding));
-            controlWriter = new PrintWriter(new OutputStreamWriter(controlSocket.getOutputStream(), encoding));
-            readReplies();
-            sendCommand(FTPCommands.USER + " " + username);
-            if (!FTPCommands.infoRequested(readReply()))
-                return false;
-            sendCommand(FTPCommands.PASS + " " + password);
-            if(!FTPCommands.isCommandOkay(readReply()))
-                return false;
+            controlWriter = new PrintWriter(new OutputStreamWriter(controlSocket.getOutputStream(), encoding), true);
+            readReply();
             this.host = host;
             this.port = port;
-            this.username = username;
-            this.password = password;
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return false;
         }
     }
 
-    public synchronized void disconnect() {
+    public boolean login(String username, String password){
+        if(controlSocket == null)
+            return false;
+        sendCommand(FTPCommand.USER + " " + username);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
+            return false;
+        sendCommand(FTPCommand.PASS + " " + password);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isOkay())
+            return false;
+        this.username = username;
+        this.password = password;
+        return true;
+    }
+
+    public boolean register(String username, String password){
+        if(controlSocket == null)
+            return false;
+        sendCommand(FTPCommand.REG + " " + username + " " + password);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
+    }
+
+    public void disconnect() {
         try {
-            if(!isServerClose()) {
-                sendCommand(FTPCommands.QUIT);
+            if (!isServerClose()) {
+                sendCommand(FTPCommand.QUIT);
                 readReply();
             }
-            controlSocket.close();
-            if (dataSocket != null)
-                dataSocket.close();
+            if(controlSocket != null)
+                controlSocket.close();
+            controlSocket = null;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
-    private synchronized void sendCommand(String command) {
+    private void sendCommand(String command) {
         if (controlSocket == null) {
-            MessageUtils.showErrorMessage("cn.edu.shu.ftp is not connect!");
+            MessageUtils.showErrorMessage("Ftp has not been connected!");
             return;
         }
-        controlWriter.write(command + "\r\n");
-        controlWriter.flush();
-        if (command.startsWith(FTPCommands.PASS))
-            logger.log(FTPCommands.PASS + " ******");
+
+        controlWriter.println(command);
+        if (command.startsWith(FTPCommand.PASS))
+            msgListener.println(FTPCommand.PASS + " ******");
         else
-            logger.log(command);
+            msgListener.println(command);
+        logger.info(command);
     }
 
-    public synchronized String readReply(){
+    public String readReply() {
         try {
             response = controlReader.readLine();
-            logger.log("> " + response);
+            msgListener.println("> " + response);
+            logger.info("> " + response);
         } catch (IOException e) {
-            MessageUtils.showErrorMessage(Constants.RESPONSE_ERROR);
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         return response;
     }
 
-    private synchronized void readReplies() {
+    public void readReplies() {
         try {
             controlSocket.setSoTimeout(Constants.TIME_OUT);
             while ((response = controlReader.readLine()) != null) {
-                logger.log("> " + response);
+                msgListener.println("> " + response);
             }
         } catch (SocketTimeoutException ignored) {
         } catch (IOException e) {
-            MessageUtils.showErrorMessage(Constants.RESPONSE_ERROR);
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -139,89 +145,67 @@ public class FTPClient {
         this.passiveMode = passiveMode;
     }
 
-    public void setSecureMode(boolean secureMode){
+    public void setSecureMode(boolean secureMode) {
         this.secureMode = secureMode;
     }
 
-    private synchronized boolean establishDataConnect() {
+    private Socket establishDataConnection(String command) {
         openConnectionIfClose();
-        if (passiveMode && pasvDataConnect())
-            return true;
-        else return !passiveMode && portDataConnect();
+        if (passiveMode)
+            return establishPasvDataConnection(command);
+        else
+            return  establishPortDataConnection(command);
     }
 
-    private synchronized boolean pasvDataConnect() {
-        sendCommand(FTPCommands.PASV);
+    private Socket establishPasvDataConnection(String command) {
+        sendCommand(FTPCommand.PASV);
         readReply();
         // get server address
-        String ipAndPort = response.substring(response.indexOf('(') + 1, response.indexOf(')'));
-        StringTokenizer tokenizer = new StringTokenizer(ipAndPort, ",");
-        String ip = tokenizer.nextToken() + '.' + tokenizer.nextToken() + '.'
-                + tokenizer.nextToken() + '.' + tokenizer.nextToken();
-        int port = Integer.parseInt(tokenizer.nextToken()) * 256 + Integer.parseInt(tokenizer.nextToken());
+        InetSocketAddress socketAddress = utils.getAddressByString(response.substring(response.indexOf('(') + 1, response.indexOf(')')));
         // local computer connect the remote server
         try {
-            dataSocket = new Socket(ip, port);
-            dataReader = dataSocket.getInputStream();
-            dataWriter = dataSocket.getOutputStream();
+            Socket socket = new Socket();
+            socket.connect(socketAddress);
+            sendCommand(command);
+            return socket;
         } catch (IOException e) {
             MessageUtils.showErrorMessage("Open passive data connection failed!");
-            e.printStackTrace();
-            return false;
+            logger.error(e.getMessage(), e);
+            return null;
         }
-        return true;
     }
 
-    private synchronized boolean portDataConnect() {
+    private Socket establishPortDataConnection(String command) {
         // produce a random port number
+        InetAddress localAddress = controlSocket.getLocalAddress();
+        ServerSocket serverSocket;
         try {
-            serverSocket = new ServerSocket(0);
-            Thread thread = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        dataSocket = serverSocket.accept();
-                        dataReader = dataSocket.getInputStream();
-                        dataWriter = dataSocket.getOutputStream();
-                    } catch (IOException e) {
-                        MessageUtils.showErrorMessage("Open active data connection failed!");
-                        e.printStackTrace();
-                    }
-                }
-            };
-            thread.start();
-
-            String localIp = controlSocket.getLocalAddress().getHostAddress();
-            int localPort = serverSocket.getLocalPort();
-            sendCommand(FTPCommands.PORT + " " + localIp.replace('.', ',')
-                    + ',' + (localPort >> 8) + ',' + (localPort & 0xff));
-            if (!FTPCommands.isCommandOkay(readReply()))
-                return false;
+             serverSocket = new ServerSocket(0, 1, localAddress);
         } catch (IOException e) {
+            logger.error(e.getMessage(), e);
             MessageUtils.showErrorMessage("Open active data connection failed!");
-            e.printStackTrace();
-            return false;
+            return null;
         }
-        return true;
-    }
-
-    public synchronized void destroyDataConnect() {
+        InetSocketAddress socketAddress = new InetSocketAddress(localAddress,  serverSocket.getLocalPort());
+        String str = utils.getStringByAddress(socketAddress);
+        sendCommand(FTPCommand.PORT + " " + str);
+        readReply();
+        if(!FTPReplyCode.find(getReplyCode()).isOkay())
+            return null;
+        sendCommand(command);
         try {
-            dataWriter.close();
-            dataReader.close();
-            if (serverSocket != null)
-                serverSocket.close();
-            if (dataSocket != null)
-                dataSocket.close();
+            Socket socket = serverSocket.accept();
+            serverSocket.close();
+            return socket;
         } catch (IOException e) {
-            MessageUtils.showErrorMessage("Destroy data connection failed");
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
+            MessageUtils.showErrorMessage("Open active data connection failed!");
+            return null;
         }
     }
 
     public synchronized String printWorkingDir() {
-//        openConnectionIfClose();
-        sendCommand(FTPCommands.PWD);
+        sendCommand(FTPCommand.PWD);
         readReply();
         currentPath = response.substring(response.indexOf('\"') + 1, response.lastIndexOf('\"'));
         return currentPath;
@@ -229,54 +213,26 @@ public class FTPClient {
 
     public synchronized FTPFile[] getFiles(FTPFile parent) {
         try {
-            if (!establishDataConnect())
+            Socket socket = establishDataConnection(FTPCommand.MLSD + " " + parent.getPath());
+            if (socket == null)
                 return new FTPFile[0];
-            boolean parseMLSD = true;
-            sendCommand(FTPCommands.MLSD + " " + parent.getPath());
-            if(!FTPCommands.isReady(readReply())){
-                parseMLSD = false;
-                sendCommand(FTPCommands.LIST + " " + parent.getPath());
-                readReply();
-            }
-            byte[] bytes = new byte[Constants.KB]; // read 1kb once
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); // store data temporary
-            int len;
-            while ((len = dataReader.read(bytes)) != -1)
-                outputStream.write(bytes, 0, len);
-            outputStream.flush();
 
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, encoding));
+            readReply();
+            if (!FTPReplyCode.find(getReplyCode()).isReady())
+                return new FTPFile[0];
+
+            InputStream in = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
             List<FTPFile> files = new ArrayList<>();
-            if(parseMLSD) {
-                while ((line = reader.readLine()) != null) {
-                    FTPFile child = Helper.parseMLSD(line, parent);
-                    files.add(child);
-                }
-            }else if((line = reader.readLine()) != null){
-                int length = line.split("\\s+").length;
-                if(length == 4) {
-                    FTPFile child = Helper.parseDOS(line, parent);
-                    files.add(child);
-                    while ((line = reader.readLine()) != null) {
-                        child = Helper.parseDOS(line, parent);
-                        files.add(child);
-                    }
-                }else if(length == 9){
-                    FTPFile child = Helper.parseUNIX(line, parent);
-                    files.add(child);
-                    while ((line = reader.readLine()) != null) {
-                        child = Helper.parseUNIX(line, parent);
-                        files.add(child);
-                    }
-                }else {
-                    MessageUtils.showErrorMessage("Format of list command is unknown!");
-                    return new FTPFile[0];
-                }
-
+            while ((line = reader.readLine()) != null) {
+                FTPFile child = parseMLSD(line, parent);
+                files.add(child);
+                msgListener.println(line);
             }
-            destroyDataConnect();
+            reader.close();
+            socket.close();
+
             readReply(); // after transfer
             FTPFile[] ftpFiles = new FTPFile[files.size()];
             files.toArray(ftpFiles);
@@ -284,15 +240,16 @@ public class FTPClient {
             return ftpFiles;
         } catch (IOException e) {
             MessageUtils.showErrorMessage("Data stream transfer failed!");
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return new FTPFile[0];
         }
     }
 
     public synchronized boolean changeDirectory(String dir) {
         openConnectionIfClose();
-        sendCommand(FTPCommands.CWD + " " + dir);
-        if (!FTPCommands.isCommandOkay(readReply()))
+        sendCommand(FTPCommand.CWD + " " + dir);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isOkay())
             return false;
         currentPath = dir;
         return true;
@@ -300,10 +257,11 @@ public class FTPClient {
 
     public synchronized boolean changeUpToParent() {
         openConnectionIfClose();
-        if(Constants.SEPARATOR.equals(currentPath))
+        if (Constants.SEPARATOR.equals(currentPath))
             return false;
-        sendCommand(FTPCommands.CDUP);
-        if (!FTPCommands.isCommandOkay(readReply()))
+        sendCommand(FTPCommand.CDUP);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isOkay())
             return false;
         currentPath = response.substring(response.indexOf('\"') + 1, response.lastIndexOf('\"'));
         return true;
@@ -315,122 +273,191 @@ public class FTPClient {
 
     /**
      * download file from remote machine
+     *
      * @param filename the name of file under the current working dir
      * @return input stream if download successfully, otherwise null
      */
     public synchronized InputStream getRetrStream(String filename) {
-        if (!establishDataConnect())
+        Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
+        if (socket == null)
             return null;
-        // set transfer type to binary
-        sendCommand(type);
+
         readReply();
         // send download command
         if (restartOffset > 0L) {
-            sendCommand(FTPCommands.REST + " " + restartOffset);
-            if (!FTPCommands.infoRequested(readReply()))
+            sendCommand(FTPCommand.REST + " " + restartOffset);
+            readReply();
+            if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
                 return null;
         }
-        sendCommand(FTPCommands.RETR + " " + filename);
-        if (!FTPCommands.isReady(readReply()))
+
+        sendCommand(FTPCommand.RETR + " " + filename);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isReady()) {
             return null;
-        return dataReader;
+        }
+        try {
+            return socket.getInputStream();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     /**
      * upload file to the remote machine
+     *
      * @param filename the name of file under the current working dir
      * @return output stream if upload successfully, otherwise null
      */
     public synchronized OutputStream getStorStream(String filename) {
-        if (!establishDataConnect())
+        Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
+        if (socket == null)
             return null;
-        sendCommand(type);
+//        sendCommand(FTPCommand.TYPE + " " + type);
         readReply();
-        sendCommand(FTPCommands.STOR + " " + filename);
-        if (!FTPCommands.isReady(readReply()))
+        sendCommand(FTPCommand.STOR + " " + filename);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isReady()) {
             return null;
-        return dataWriter;
+        }
+        try {
+            return socket.getOutputStream();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
-    public synchronized OutputStream getAppeStream(String filename){
-        if(!establishDataConnect())
+    public synchronized OutputStream getAppeStream(String filename) {
+        Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
+        if (socket == null)
             return null;
-        sendCommand(type);
+//        sendCommand(FTPCommand.TYPE + " " + type);
         readReply();
-        sendCommand(FTPCommands.APPE + " " + filename);
-        if(!FTPCommands.isReady(readReply()))
+        sendCommand(FTPCommand.APPE + " " + filename);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isReady()) {
             return null;
-        return dataWriter;
+        }
+        try {
+            return socket.getOutputStream();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
-    public synchronized boolean rename(String src, String dst){
+    public synchronized boolean rename(String src, String dst) {
         openConnectionIfClose();
-        sendCommand(FTPCommands.RNFR + " " + src);
-        if(!FTPCommands.infoRequested(readReply()))
+        sendCommand(FTPCommand.RNFR + " " + src);
+        readReply();
+        if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
             return false;
-        sendCommand(FTPCommands.RNTO + " " + dst);
-        return FTPCommands.isCommandOkay(readReply());
+        sendCommand(FTPCommand.RNTO + " " + dst);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
     public synchronized boolean delete(String filename) {
         openConnectionIfClose();
-        sendCommand(FTPCommands.DELE + " " + filename);
-        return FTPCommands.isCommandOkay(readReply());
+        sendCommand(FTPCommand.DELE + " " + filename);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
     public synchronized boolean makeDirectory(String dir) {
         openConnectionIfClose();
-        sendCommand(FTPCommands.MKD + " " + dir);
-        return FTPCommands.isCommandOkay(readReply());
+        sendCommand(FTPCommand.MKD + " " + dir);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
     public synchronized boolean removeDirectory(String dir) {
         openConnectionIfClose();
-        sendCommand(FTPCommands.RMD + " " + dir);
-        return FTPCommands.isCommandOkay(readReply());
+        sendCommand(FTPCommand.RMD + " " + dir);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
-    public synchronized boolean noop(){
-        sendCommand(FTPCommands.NOOP);
-        return FTPCommands.isCommandOkay(readReply());
+    public synchronized boolean noop() {
+        sendCommand(FTPCommand.NOOP);
+        readReply();
+        return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
-    private boolean isServerClose(){
-        controlWriter.write(FTPCommands.NOOP + "\r\n");
-        controlWriter.flush();
-        try{
+    private boolean isServerClose() {
+        controlWriter.println(FTPCommand.NOOP);
+        try {
             controlReader.readLine();
-        }catch (IOException e) {
+        } catch (IOException e) {
+            msgListener.println("Disconnected by server");
             return true;
         }
         return false;
     }
 
-    private void reconnect(){
-        try {
-            controlReader.close();
-            controlWriter.close();
-            controlSocket.close();
-            connect(host, port, username, password);
-        }catch (IOException e){
-            MessageUtils.showErrorMessage(Constants.RECONNECT_FAILED);
-        }
+    private void reconnect() {
+        closeControlSocket();
+        connect(host, port);
+        login(username, password);
     }
 
-    private void openConnectionIfClose(){
-        if(isServerClose())
+    private void openConnectionIfClose() {
+        if (isServerClose())
             reconnect();
+    }
+
+    private FTPFile parseMLSD(String line, FTPFile parent) {
+        FTPFile file = new FTPFile(parent);
+        Date date = utils.parseDate(getValue(line, Constants.KEY_MODIFY));
+        file.setLastChanged(date);
+        file.setType(getValue(line, Constants.KEY_TYPE));
+        if (!file.isDirectory())
+            file.setSize(Long.parseLong(getValue(line, Constants.KEY_SIZE)));
+        file.setName(line.substring(line.lastIndexOf(";") + 2, line.length()));
+        file.setPath(utils.getPath(parent.getPath(), file.getName()));
+        return file;
+    }
+
+    private static String getValue(String line, String key) {
+        int index = line.indexOf(key);
+        return line.substring(index + key.length(), line.indexOf(';', index));
     }
 
     public void setRestartOffset(long restartOffset) {
         this.restartOffset = restartOffset;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setDataType(DataType type) {
+        this.dataType = type;
+    }
+
+    public DataType getDataType() {
+        return dataType;
     }
 
     public void setEncoding(String encoding) {
         this.encoding = encoding;
+    }
+
+    private int getReplyCode() {
+        return Integer.parseInt(response.substring(0, 3));
+    }
+    
+    public void closeControlSocket(){
+        try {
+            if (controlWriter != null)
+                controlWriter.close();
+            controlWriter = null;
+            if (controlReader != null)
+                controlReader.close();
+            controlReader = null;
+            if (controlSocket != null)
+                controlSocket.close();
+            controlSocket = null;
+        }catch (IOException e){
+            logger.error(e.getMessage(), e);
+        }
     }
 }

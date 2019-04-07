@@ -6,32 +6,13 @@
 package cn.edu.shu.client.util;
 
 import cn.edu.shu.client.ftp.FTPFile;
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public interface Helper {
-    static FTPFile parseMLSD(String line, FTPFile parent) {
-        FTPFile file = new FTPFile(parent);
-        SimpleDateFormat parseDate = new SimpleDateFormat(Constants.DATE_PATTERN);
-        try {
-            Date date = parseDate.parse(getValue(line, Constants.KEY_MODIFY));
-            file.setLastChanged(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        file.setType(getValue(line, Constants.KEY_TYPE));
-        if (!file.isDirectory())
-            file.setSize(Long.parseLong(getValue(line, Constants.KEY_SIZE)));
-        file.setName(line.substring(line.lastIndexOf(";") + 2, line.length()));
-        String path = parent.getPath();
-        if (path.endsWith(Constants.SEPARATOR))
-            file.setPath(path + file.getName());
-        else
-            file.setPath(path + Constants.SEPARATOR + file.getName());
-        return file;
-    }
 
     static FTPFile parseDOS(String line, FTPFile parent) {
         FTPFile file = new FTPFile(parent);
@@ -47,11 +28,7 @@ public interface Helper {
         if (!file.isDirectory())
             file.setSize(Long.parseLong(infos[2]));
         file.setName(infos[3]);
-        String path = parent.getPath();
-        if (path.endsWith(Constants.SEPARATOR))
-            file.setPath(path + file.getName());
-        else
-            file.setPath(path + Constants.SEPARATOR + file.getName());
+        file.setPath(Utils.getInstance().getPath(parent.getPath(), file.getName()));
         return file;
     }
 
@@ -82,32 +59,8 @@ public interface Helper {
         if (!file.isDirectory())
             file.setSize(Long.parseLong(infos[4]));
         file.setName(infos[8]);
-        String path = parent.getPath();
-        if (path.endsWith(Constants.SEPARATOR))
-            file.setPath(path + file.getName());
-        else
-            file.setPath(path + Constants.SEPARATOR + file.getName());
+        file.setPath(Utils.getInstance().getPath(parent.getPath(), file.getName()));
         return file;
     }
 
-    static String getValue(String line, String key) {
-        int index = line.indexOf(key);
-        return line.substring(index + key.length() + 1, line.indexOf(';', index));
-    }
-
-    static void reverse(Object[] objects, int start, int end) {
-        Object temp;
-        while (start < end) {
-            temp = objects[start];
-            objects[start] = objects[end];
-            objects[end] = temp;
-            start++;
-            end--;
-        }
-    }
-
-    static String generateSuffix() {
-        SimpleDateFormat format = new SimpleDateFormat(Constants.DATE_PATTERN);
-        return format.format(new Date());
-    }
 }

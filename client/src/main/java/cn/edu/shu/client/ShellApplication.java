@@ -16,7 +16,7 @@ public class ShellApplication {
         UIManager.put("PasswordField.font", new Font("宋体", Font.PLAIN, 18));
         UIManager.put("CheckBox.font", new Font("宋体", Font.PLAIN, 18));
 
-        Utils.setLookAndInfo();
+        Utils.getInstance().setLookAndFeel();
 
         // display cn.edu.shu.ui
         SwingUtilities.invokeLater(new Runnable() {

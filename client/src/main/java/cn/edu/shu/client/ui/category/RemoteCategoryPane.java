@@ -8,7 +8,7 @@ package cn.edu.shu.client.ui.category;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.client.util.Helper;
 import cn.edu.shu.client.util.TreeUtils;
 import cn.edu.shu.common.util.MessageUtils;
@@ -52,7 +52,7 @@ public class RemoteCategoryPane extends CategoryPane {
     @Override
     void initPopupMenu() {
         // for remote, files can be downloaded
-        downloadItem = new JMenuItem("Download", new ImageIcon(Utils.getResourcePath(getClass(), "download.png")));
+        downloadItem = new JMenuItem("Download", new ImageIcon(utils.getResourcePath(getClass(), "download.png")));
         tableMenu.add(downloadItem);
         tableMenu.addSeparator();
         downloadItem.addActionListener(menuListener);
@@ -225,7 +225,7 @@ public class RemoteCategoryPane extends CategoryPane {
 
     private boolean deleteFolder(FTPFile dir) {
         if (dir.isDirectory()) {
-            FTPFile[] files = getFileChildren(dir);
+            FTPFile[] files = ftpClient.getFiles(dir);
             for (FTPFile file : files) {
                 boolean success = deleteFolder(file);
                 if (!success)
@@ -240,17 +240,13 @@ public class RemoteCategoryPane extends CategoryPane {
 
     @Override
     void newFolder() {
-        String newName = Constants.INIT_NAME + Helper.generateSuffix();
-        String path;
-        if (currentFile.getPath().endsWith(Constants.SEPARATOR))
-            path = currentFile.getPath() + newName;
-        else
-            path = currentFile.getPath() + Constants.SEPARATOR + newName;
+        String newName = Constants.INIT_NAME + utils.formatDate(new Date());
+        String path = utils.getPath(currentFile.getPath(), newName);
         if (ftpClient.makeDirectory(path)) {
             FTPFile file = new FTPFile(currentFile);
             file.setPath(path);
             file.setName(newName);
-            file.setType(Constants.TYPE_DIR);
+            file.setType(Constants.FILE_FOLDER);
             file.setLastChanged(new Date());
             tableModel.addRow(file);
             int row = tableModel.getRowCount() - 1;
@@ -282,7 +278,7 @@ public class RemoteCategoryPane extends CategoryPane {
         home = new FTPFile();
         home.setPath(ftpClient.printWorkingDir());
         home.setName(home.getPath());
-        home.setType(Constants.TYPE_DIR);
+        home.setType(Constants.FILE_FOLDER);
         home.setParent(null);
         currentFile = home;
         root = new FileTreeNode(currentFile);

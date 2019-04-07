@@ -6,7 +6,7 @@
 package cn.edu.shu.client.ui.category;
 
 import cn.edu.shu.client.listener.TransferListener;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.client.util.Helper;
 import cn.edu.shu.client.util.TreeUtils;
 import cn.edu.shu.common.util.MessageUtils;
@@ -19,6 +19,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 
 public class LocalCategoryPane extends CategoryPane {
 
@@ -53,7 +54,7 @@ public class LocalCategoryPane extends CategoryPane {
     @Override
     void initPopupMenu() {
         // for local, files can be uploaded
-        uploadItem = new JMenuItem("Upload", new ImageIcon(Utils.getResourcePath(getClass(), "upload.png")));
+        uploadItem = new JMenuItem("Upload", new ImageIcon(utils.getResourcePath(getClass(), "upload.png")));
         tableMenu.add(uploadItem);
         tableMenu.addSeparator();
         uploadItem.addActionListener(menuListener);
@@ -165,7 +166,7 @@ public class LocalCategoryPane extends CategoryPane {
         }
     }
 
-    private void openFile(File file) {
+    public void openFile(File file) {
         try {
             desktop.open(file);
         } catch (IOException e) {
@@ -223,7 +224,7 @@ public class LocalCategoryPane extends CategoryPane {
     }
 
     void newFolder() {
-        String newName = Constants.INIT_NAME + Helper.generateSuffix();
+        String newName = Constants.INIT_NAME + utils.formatDate(new Date());
         String path = currentFile.getPath() + Constants.SEPARATOR + newName;
         File file = new File(path);
         if (!file.exists() && file.mkdir()) {

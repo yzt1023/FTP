@@ -9,7 +9,10 @@ import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.bean.DataType;
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Queue;
@@ -19,6 +22,8 @@ public class DownloadThread extends Thread {
     private Queue<Task> queue;
     private FTPClient ftpClient;
     private TransferListener listener;
+    private Utils utils = Utils.getInstance();
+    private Logger logger = Logger.getLogger(getClass());
 
     public DownloadThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener){
         this.queue = queue;
@@ -54,7 +59,7 @@ public class DownloadThread extends Thread {
                     }
                 }
             }catch (Exception e){
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
     }
@@ -84,7 +89,8 @@ public class DownloadThread extends Thread {
 
     private boolean downloadFile(Task task) throws IOException {
         FTPFile ftpFile = task.getFtpFile();
-        task.setSize(ftpFile.getSize() / Constants.KB + 1);
+        long size = ftpFile.getSize() / Constants.KB + 1;
+        task.setSize(size);
         InputStream inputStream = ftpClient.getRetrStream(ftpFile.getPath());
         if(inputStream == null)
             return false;
@@ -92,15 +98,21 @@ public class DownloadThread extends Thread {
         FileOutputStream out = new FileOutputStream(task.getFile());
         byte[] bytes = new byte[Constants.KB];
         int len, read = 0;
+        boolean lastWasCR = false;
         while((len = in.read(bytes)) != -1){
-            out.write(bytes, 0, len);
+            if(ftpClient.getDataType() == DataType.BINARY || utils.noConversionRequired())
+                out.write(bytes, 0, len);
+            else {
+                for(byte b : bytes)
+                    lastWasCR = utils.fromNetWrite(lastWasCR, out, b);
+            }
             task.setProgress(++read);
             listener.notifyProgress(task);
         }
-        out.close();
         ftpClient.readReply();
-        ftpClient.destroyDataConnect();
-        return true;
+        out.close();
+        in.close();
+        return read == size;
     }
 
     private boolean downloadDir(String localDir, FTPFile ftpFile)throws IOException{
@@ -132,12 +144,18 @@ public class DownloadThread extends Thread {
         FileOutputStream out = new FileOutputStream(file);
         byte[] bytes = new byte[Constants.KB];
         int len;
+        boolean lastWasCR = false;
         while((len = in.read(bytes)) != -1){
-            out.write(bytes, 0, len);
+            if(ftpClient.getDataType() == DataType.BINARY || Utils.getInstance().noConversionRequired())
+                out.write(bytes, 0, len);
+            else {
+                for(byte b : bytes)
+                    lastWasCR = utils.fromNetWrite(lastWasCR, out, b);
+            }
         }
-        out.close();
         ftpClient.readReply();
-        ftpClient.destroyDataConnect();
+        out.close();
+        in.close();
         return true;
     }
 

@@ -6,7 +6,7 @@
 package cn.edu.shu.client.ui.task;
 
 import cn.edu.shu.client.ftp.FTPFile;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
 
 import java.io.File;
 import java.util.Date;

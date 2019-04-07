@@ -1,7 +1,7 @@
 package cn.edu.shu.client.ui;
 
 import cn.edu.shu.client.listener.ConnectListener;
-import cn.edu.shu.client.util.Constants;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 
 import javax.swing.*;
@@ -43,7 +43,8 @@ class ConnectPane extends JPanel {
         lblHost = new JLabel("Host: ");
         txtHost = new JTextField();
         lblPort = new JLabel("Port: ");
-        txtPort = new JTextField("21");
+        txtPort = new JTextField();
+        txtPort.setText(String.valueOf(Constants.DEFAULT_PORT));
         cbAnonymous = new JCheckBox("Anonymous");
         btnConnect = new JButton(CONNECT);
 
@@ -76,7 +77,7 @@ class ConnectPane extends JPanel {
         String host = txtHost.getText();
         String port = txtPort.getText();
         boolean anonymous = cbAnonymous.isSelected();
-        int portNum = 21;
+        int portNum = Constants.DEFAULT_PORT;
         String username = txtUsername.getText();
         char[] password = txtPwd.getPassword();
         if (host.isEmpty()) {
@@ -88,6 +89,7 @@ class ConnectPane extends JPanel {
                 portNum = Integer.parseInt(txtPort.getText());
             } catch (NumberFormatException exception) {
                 MessageUtils.showErrorMessage(Constants.INVALID_PORT);
+                return;
             }
         }
         if (anonymous && listener.fireConnect(host, portNum)) {

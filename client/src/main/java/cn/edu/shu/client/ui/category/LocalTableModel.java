@@ -5,9 +5,9 @@
 
 package cn.edu.shu.client.ui.category;
 
-import cn.edu.shu.client.util.Constants;
-import cn.edu.shu.client.util.Helper;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
+import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -113,7 +113,7 @@ public class LocalTableModel extends AbstractTableModel {
                 sortFiles[j--] = file;
         }
         j = files.length - 1;
-        Helper.reverse(sortFiles, i, j);
+        Utils.getInstance().reverse(sortFiles, i, j);
         files = sortFiles;
     }
 

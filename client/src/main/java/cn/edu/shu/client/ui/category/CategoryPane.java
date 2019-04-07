@@ -33,6 +33,7 @@ public abstract class CategoryPane extends JPanel {
     private JMenuItem renameItem;
     private JMenuItem refreshItem;
     private JPopupMenu treeMenu;
+    Utils utils = Utils.getInstance();
 
     CategoryPane() {
         super();
@@ -100,11 +101,11 @@ public abstract class CategoryPane extends JPanel {
      * set icon and add action cn.edu.shu.listener
      */
     void initPopupMenu() {
-        openItem = new JMenuItem("Open", new ImageIcon(Utils.getResourcePath(getClass(), "folder_open.png")));
-        newItem = new JMenuItem("New folder", new ImageIcon(Utils.getResourcePath(getClass(), "create_folder.png")));
-        deleteItem = new JMenuItem("Delete", new ImageIcon(Utils.getResourcePath(getClass(), "delete_folder.png")));
-        renameItem = new JMenuItem("Rename", new ImageIcon(Utils.getResourcePath(getClass(), "rename.png")));
-        refreshItem = new JMenuItem("Refresh", new ImageIcon(Utils.getResourcePath(getClass(), "refresh.png")));
+        openItem = new JMenuItem("Open", new ImageIcon(utils.getResourcePath(getClass(), "folder_open.png")));
+        newItem = new JMenuItem("New folder", new ImageIcon(utils.getResourcePath(getClass(), "create_folder.png")));
+        deleteItem = new JMenuItem("Delete", new ImageIcon(utils.getResourcePath(getClass(), "delete_folder.png")));
+        renameItem = new JMenuItem("Rename", new ImageIcon(utils.getResourcePath(getClass(), "rename.png")));
+        refreshItem = new JMenuItem("Refresh", new ImageIcon(utils.getResourcePath(getClass(), "refresh.png")));
 
         tableMenu.add(openItem);
         tableMenu.add(newItem);
@@ -265,7 +266,7 @@ public abstract class CategoryPane extends JPanel {
      */
     private void initFilePath() {
         // set properties
-        imgUp.setIcon(new ImageIcon(Utils.getResourcePath(getClass(), "up.png")));
+        imgUp.setIcon(new ImageIcon(utils.getResourcePath(getClass(), "up.png")));
         imgUp.setContentAreaFilled(false);
         imgUp.setBorder(null);
 
