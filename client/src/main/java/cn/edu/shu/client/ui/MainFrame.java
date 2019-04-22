@@ -10,9 +10,10 @@ import cn.edu.shu.client.ui.category.LocalCategoryPane;
 import cn.edu.shu.client.ui.category.RemoteCategoryPane;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.client.ui.task.TaskPane;
-import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.log.MsgPane;
+import cn.edu.shu.client.util.TransferUtils;
 import cn.edu.shu.common.log.MsgListener;
+import cn.edu.shu.common.log.MsgPane;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 import cn.edu.shu.common.util.Utils;
 
@@ -25,6 +26,8 @@ import java.util.Queue;
 
 public class MainFrame extends JFrame implements TransferListener, ConnectListener, MsgListener {
 
+    private static final int DEFAULT_WIDTH = 1500;
+    private static final int DEFAULT_HEIGHT = 1000;
     private JTabbedPane tabbedPane;
     private JPanel contentPanel;
     private ConnectPane connectPane;
@@ -36,9 +39,8 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private FTPClient ftpClient;
     private Deque<Task> downloadQueue;
     private Queue<Task> uploadQueue;
-    private static final int DEFAULT_WIDTH = 1500;
-    private static final int DEFAULT_HEIGHT = 1000;
     private Utils utils;
+    private TransferUtils transferUtils;
 
     public MainFrame() {
         super("FTPClient");
@@ -46,6 +48,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         this.setLocation(50, 50);
         this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
         utils = Utils.getInstance();
+        transferUtils = TransferUtils.getInstance();
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
         this.setIconImage(icon);
 
@@ -105,14 +108,18 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         if (tempDir)
             localDir = Constants.TEMP_DIR;
         File file = new File(localDir, ftpFile.getName());
-        if(file.exists()) {
-            MessageUtils.showErrorMessage(Constants.FILE_EXISTS);
+        if (file.exists()) {
+            MessageUtils.showInfoMessage(Constants.FILE_EXISTS);
             return;
         }
 
         Task task = new Task(file, ftpFile, true);
+        // scan file to obtain the file size
+        long size = transferUtils.getTotalSize(ftpFile, ftpClient);
+        task.setMaxValue(size);
+        task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
-        if(tempDir)
+        if (tempDir)
             downloadQueue.offerFirst(task);
         else
             downloadQueue.offerLast(task);
@@ -121,10 +128,13 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     @Override
     public void fireUpload(File file) {
         FTPFile parent = remoteCategoryPane.getCurrentFile();
-        String path = utils.getPath(parent.getPath(), file.getName());
         FTPFile ftpFile = new FTPFile(parent);
+        String path = utils.getPath(parent.getPath(), file.getName());
         ftpFile.setPath(path);
         Task task = new Task(file, ftpFile, false);
+        long size = transferUtils.getTotalSize(file);
+        task.setMaxValue(size);
+        task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
         uploadQueue.offer(task);
     }
@@ -142,12 +152,15 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     @Override
     public void afterTransfer(Task task) {
         taskPane.getTableModel().updateState(task);
+        if (!Constants.STATE_SUCCESS.equals(task.getState()))
+            return;
+
         if (task.isDownload()) {
-            localCategoryPane.getTableModel().addRow(task.getFile());
             File file = task.getFile();
-            String path = file.getParent();
-            if(Constants.TEMP_DIR.equals(path.substring(path.lastIndexOf(Constants.SEPARATOR))))
+            if (file.isFile() && file.getPath().startsWith(Constants.TEMP_DIR))
                 localCategoryPane.openFile(file);
+            else
+                localCategoryPane.getTableModel().addRow(task.getFile());
         } else {
             remoteCategoryPane.getTableModel().addRow(task.getFtpFile());
         }
@@ -160,7 +173,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
     @Override
     public boolean fireConnect(String host, int port) {
-       return fireConnect(host, port, Constants.ANONYMOUS_USER, "");
+        return fireConnect(host, port, Constants.ANONYMOUS_USER, "");
     }
 
     @Override

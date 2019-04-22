@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class MessageUtils {
 
-    public static void showErrorMessage(String message) {
+    public static void showInfoMessage(String message) {
         JOptionPane.showMessageDialog(null, message);
     }
 

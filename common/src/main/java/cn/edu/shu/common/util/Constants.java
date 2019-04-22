@@ -12,7 +12,7 @@ public interface Constants {
     String NET_EOL = "\r\n";
     String ENCRYPTION_AES = "AES";
     String ANONYMOUS_USER = "anonymous";
-    int DEFAULT_PORT = 2121;
+    int DEFAULT_PORT = 21;
     String DEFAULT_IP = "127.0.0.1";
     int TIME_OUT = 500;
     String DATE_PATTERN = "yyyyMMddHHmm";
@@ -51,6 +51,9 @@ public interface Constants {
     String CONNECT_FAILED = "Unable to connect to the specified server!";
     String RESPONSE_ERROR = "Read response failed!";
     String RECONNECT_FAILED = "Reconnect failed!";
+    // user
+    String EMPTY_PASSWORD = "Password cannot be empty!";
+    String USER_EXISTS = "Username has been registered! Please use another username!";
     String PASSWORD_DIFFERENT = "The two passwords entered are different";
     // transfer task state
     String STATE_WAITING = "WAITING";

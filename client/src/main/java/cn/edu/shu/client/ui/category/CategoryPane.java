@@ -17,23 +17,21 @@ public abstract class CategoryPane extends JPanel {
     // current file path
     JLabel lblCategory;
     JTextField txtCategory;
-    private JButton imgUp;
     // tree and table
     JTable ctgTable;
     JTree ctgTree;
-    private JScrollPane scrollTable;
-    private JScrollPane scrollTree;
     FileTreeNode root;
     // tableMenu
     JPopupMenu tableMenu;
     ActionListener menuListener;
+    Utils utils = Utils.getInstance();
+    private JButton imgUp;
+    private JScrollPane scrollTable;
+    private JScrollPane scrollTree;
     private JMenuItem openItem;
-    private JMenuItem newItem;
     private JMenuItem deleteItem;
     private JMenuItem renameItem;
-    private JMenuItem refreshItem;
     private JPopupMenu treeMenu;
-    Utils utils = Utils.getInstance();
 
     CategoryPane() {
         super();
@@ -65,33 +63,30 @@ public abstract class CategoryPane extends JPanel {
      * initial tree popup menu item action cn.edu.shu.listener
      */
     private void initMenuListener() {
-        menuListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String command = e.getActionCommand();
-                switch (command) {
-                    case "Upload":
-                        uploadFile();
-                        break;
-                    case "Download":
-                        downloadFile();
-                        break;
-                    case "Open":
-                        openFile();
-                        break;
-                    case "New folder":
-                        newFolder();
-                        break;
-                    case "Delete":
-                        deleteFile();
-                        break;
-                    case "Rename":
-                        int row = ctgTable.getSelectedRow();
-                        ctgTable.editCellAt(row, 1);
-                        break;
-                    case "Refresh":
-                        refreshTable();
-                }
+        menuListener = e -> {
+            String command = e.getActionCommand();
+            switch (command) {
+                case "Upload":
+                    uploadFile();
+                    break;
+                case "Download":
+                    downloadFile();
+                    break;
+                case "Open":
+                    openFile();
+                    break;
+                case "New folder":
+                    newFolder();
+                    break;
+                case "Delete":
+                    deleteFile();
+                    break;
+                case "Rename":
+                    int row = ctgTable.getSelectedRow();
+                    ctgTable.editCellAt(row, 1);
+                    break;
+                case "Refresh":
+                    refreshTable();
             }
         };
     }
@@ -102,10 +97,10 @@ public abstract class CategoryPane extends JPanel {
      */
     void initPopupMenu() {
         openItem = new JMenuItem("Open", new ImageIcon(utils.getResourcePath(getClass(), "folder_open.png")));
-        newItem = new JMenuItem("New folder", new ImageIcon(utils.getResourcePath(getClass(), "create_folder.png")));
+        JMenuItem newItem = new JMenuItem("New folder", new ImageIcon(utils.getResourcePath(getClass(), "create_folder.png")));
         deleteItem = new JMenuItem("Delete", new ImageIcon(utils.getResourcePath(getClass(), "delete_folder.png")));
         renameItem = new JMenuItem("Rename", new ImageIcon(utils.getResourcePath(getClass(), "rename.png")));
-        refreshItem = new JMenuItem("Refresh", new ImageIcon(utils.getResourcePath(getClass(), "refresh.png")));
+        JMenuItem refreshItem = new JMenuItem("Refresh", new ImageIcon(utils.getResourcePath(getClass(), "refresh.png")));
 
         tableMenu.add(openItem);
         tableMenu.add(newItem);
@@ -217,24 +212,11 @@ public abstract class CategoryPane extends JPanel {
         treeMenu.add(expandItem);
         treeMenu.add(reloadItem);
 
-        collapseItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ctgTree.collapsePath(ctgTree.getSelectionPath());
-            }
-        });
-        expandItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ctgTree.expandPath(ctgTree.getSelectionPath());
-            }
-        });
-        reloadItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                FileTreeNode node = (FileTreeNode) ctgTree.getSelectionPath().getLastPathComponent();
-                reloadNode(node);
-            }
+        collapseItem.addActionListener(e -> ctgTree.collapsePath(ctgTree.getSelectionPath()));
+        expandItem.addActionListener(e -> ctgTree.expandPath(ctgTree.getSelectionPath()));
+        reloadItem.addActionListener(e -> {
+            FileTreeNode node = (FileTreeNode) ctgTree.getSelectionPath().getLastPathComponent();
+            reloadNode(node);
         });
 
         ctgTree.addMouseListener(new MouseAdapter() {

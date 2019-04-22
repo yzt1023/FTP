@@ -10,13 +10,11 @@ import cn.edu.shu.common.util.MessageUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
 
-public class RegisterDialog extends JDialog {
+class RegisterDialog extends JDialog {
 
     private JPanel contentPane;
     private JLabel lblTitle;
@@ -35,7 +33,7 @@ public class RegisterDialog extends JDialog {
     private JButton btnCancel;
     private MainFrame frame;
 
-    public RegisterDialog(JFrame frame){
+    RegisterDialog(JFrame frame) {
         super(frame, ModalityType.APPLICATION_MODAL);
         this.frame = (MainFrame) frame;
         this.setTitle("Register Dialog");
@@ -52,7 +50,7 @@ public class RegisterDialog extends JDialog {
 
     private void initComponents() {
         lblTitle = new JLabel("User Register");
-        Font f = new Font("Times New Roman Italic", Font.BOLD,24);
+        Font f = new Font("Times New Roman Italic", Font.BOLD, 24);
         lblTitle.setFont(f);
 
         lblHost = new JLabel("Host: ");
@@ -87,17 +85,22 @@ public class RegisterDialog extends JDialog {
             char[] confirmPwd = txtConfirmPwd.getPassword();
 
             if (host.isEmpty()) {
-                MessageUtils.showErrorMessage(Constants.EMPTY_HOST);
+                MessageUtils.showInfoMessage(Constants.EMPTY_HOST);
                 return;
             }
 
-            if(user.isEmpty()){
-                MessageUtils.showErrorMessage(Constants.EMPTY_USER);
+            if (user.isEmpty()) {
+                MessageUtils.showInfoMessage(Constants.EMPTY_USER);
                 return;
             }
 
-            if(!Arrays.equals(pwd, confirmPwd)){
-                MessageUtils.showErrorMessage(Constants.PASSWORD_DIFFERENT);
+            if (pwd.length == 0) {
+                MessageUtils.showInfoMessage(Constants.EMPTY_PASSWORD);
+                return;
+            }
+
+            if (!Arrays.equals(pwd, confirmPwd)) {
+                MessageUtils.showInfoMessage(Constants.PASSWORD_DIFFERENT);
                 return;
             }
 
@@ -105,22 +108,20 @@ public class RegisterDialog extends JDialog {
                 try {
                     portNum = Integer.parseInt(txtPort.getText());
                 } catch (NumberFormatException exception) {
-                    MessageUtils.showErrorMessage(Constants.INVALID_PORT);
+                    MessageUtils.showInfoMessage(Constants.INVALID_PORT);
                     return;
                 }
             }
 
-            if(!frame.userRegister(host, portNum, user, new String(pwd)))
-                MessageUtils.showErrorMessage("Username has been registered! Please use another username!");
+            if (!frame.userRegister(host, portNum, user, new String(pwd)))
+                MessageUtils.showInfoMessage(Constants.USER_EXISTS);
             else {
-                MessageUtils.showErrorMessage("Register successfully!");
+                MessageUtils.showInfoMessage("Register successfully!");
                 clearAll();
             }
         });
 
-        btnReset.addActionListener(e -> {
-            clearAll();
-        });
+        btnReset.addActionListener(e -> clearAll());
 
 
         btnCancel.addActionListener(e -> dispose());
@@ -136,8 +137,6 @@ public class RegisterDialog extends JDialog {
     private void setGroupLayout() {
         GroupLayout groupLayout = new GroupLayout(contentPane);
         contentPane.setLayout(groupLayout);
-        groupLayout.setAutoCreateContainerGaps(true);
-        groupLayout.setAutoCreateGaps(true);
 
         GroupLayout.SequentialGroup hostGroup = groupLayout.createSequentialGroup();
         hostGroup.addGap(60);

@@ -30,9 +30,10 @@ public class TaskTableCellRender extends JProgressBar implements TableCellRender
         }
 
         // set progress of the progress bar
-        Integer progress = (Integer) value;
+        ProgressArg arg = (ProgressArg) value;
         setStringPainted(true);
-        setValue(progress);
+        setMaximum(arg.getMaxValue());
+        setValue(arg.getValue());
         return this;
     }
 }

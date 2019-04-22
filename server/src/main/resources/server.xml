@@ -1,11 +1,5 @@
 <config>
-    <rootDir>D:\GitRoot</rootDir>
-    <users>
-        <user>
-            <username>user</username>
-            <password>user</password>
-        </user>
-    </users>
+    <rootDir>D:\tools</rootDir>
     <settings>
         <welcomeMessage>welcome to FTP written by skye you</welcomeMessage>
         <loginTimeout>60</loginTimeout>

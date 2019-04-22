@@ -9,6 +9,5 @@ import cn.edu.shu.server.ftp.FTPRequest;
 import cn.edu.shu.server.ftp.FTPSession;
 
 public interface Command {
-    void  execute(FTPSession session, FTPRequest request);
-
+    void execute(FTPSession session, FTPRequest request);
 }

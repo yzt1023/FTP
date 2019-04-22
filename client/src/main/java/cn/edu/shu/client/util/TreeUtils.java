@@ -6,8 +6,8 @@
 
 package cn.edu.shu.client.util;
 
-import cn.edu.shu.client.ui.category.FileTreeNode;
 import cn.edu.shu.client.ftp.FTPFile;
+import cn.edu.shu.client.ui.category.FileTreeNode;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -65,7 +65,7 @@ public interface TreeUtils {
             TreePath path = tree.getPathForRow(row);
             FileTreeNode node = (FileTreeNode) path.getLastPathComponent();
             String text = ((FTPFile) node.getUserObject()).getPath();
-            if (filePath.startsWith(text)) {
+            if (filePath.equals(text)) {
                 return row;
             }
             row = (row + increment + max) % max;

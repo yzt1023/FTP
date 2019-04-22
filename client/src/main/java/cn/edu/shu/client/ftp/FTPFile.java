@@ -4,6 +4,9 @@ import cn.edu.shu.common.util.Utils;
 import cn.edu.shu.common.util.Constants;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 public class FTPFile {
@@ -64,16 +67,13 @@ public class FTPFile {
 
     public void setType(String type) {
         this.type = type;
-        if(type.equals(Constants.FILE_FOLDER) || type.equals(Constants.SYSTEM_FOLDER)) {
-            isDirectory = true;
-            icon = new ImageIcon(Utils.getInstance().getResourcePath(getClass(), "folder_icon.png"));
-        }else{
-            isDirectory = false;
-            icon = new ImageIcon(Utils.getInstance().getResourcePath(getClass(), "file_icon.png"));
-        }
+        isDirectory = type.equals(Constants.FILE_FOLDER) || type.equals(Constants.SYSTEM_FOLDER);
     }
 
     public Icon getIcon() {
+        if(icon == null) {
+            icon = Utils.getInstance().getIcon(name, isDirectory);
+        }
         return icon;
     }
 

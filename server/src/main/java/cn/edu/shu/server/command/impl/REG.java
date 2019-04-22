@@ -19,7 +19,7 @@ public class REG implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
-        if(!request.hasArgument()) {
+        if (!request.hasArgument()) {
             session.println(FTPReplyCode.INVALID_PARAMETER.getReply());
             return;
         }
@@ -28,13 +28,13 @@ public class REG implements Command {
         int index = str.indexOf(" ");
         String username = str.substring(0, index);
         String password = str.substring(index + 1);
-        UserDao userDao =session.getUserDao();
-        if(userDao.isUserExists(username)) {
+        UserDao userDao = session.getUserDao();
+        if (userDao.isUserExists(username)) {
             session.println(FTPReplyCode.INVALID_PARAMETER + " The username has been registered!");
             return;
         }
 
-        User user = new User(username, password, true, true, false);
+        User user = new User(username, password, true, true, true, false);
         userDao.addUser(user);
         session.println(FTPReplyCode.COMMAND_OK.getReply());
     }

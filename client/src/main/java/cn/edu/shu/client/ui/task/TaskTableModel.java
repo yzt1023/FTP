@@ -42,15 +42,13 @@ public class TaskTableModel extends AbstractTableModel {
             case 2:
                 return task.getFtpFile().getPath();
             case 3:
-                if (task.isDownload() && task.getFtpFile().isDirectory() || !task.isDownload() && task.getFile().isDirectory())
-                    return task.getSize() + "files";
-                return task.getSize() + "KB";
+                return task.getDisplaySize();
             case 4:
                 return task.getModifyTime();
             case 5:
                 return task.getState();
             case 6:
-                return task.getProgress();
+                return task.getProgressArg();
         }
         return null;
     }
@@ -61,7 +59,7 @@ public class TaskTableModel extends AbstractTableModel {
             case 4:
                 return Date.class;
             case 6:
-                return Integer.class;
+                return ProgressArg.class;
         }
         return String.class;
     }
@@ -77,12 +75,8 @@ public class TaskTableModel extends AbstractTableModel {
         fireTableRowsInserted(max, max);
     }
 
-    private int getTaskRow(Task task) {
-        for (int i = 0; i < tasks.size(); i++) {
-            if (tasks.get(i) == task)
-                return i;
-        }
-        return -1;
+    Task getTask(int row) {
+        return tasks.get(row);
     }
 
     public void updateProgress(Task task) {
@@ -95,7 +89,16 @@ public class TaskTableModel extends AbstractTableModel {
         fireTableCellUpdated(row, 5);
     }
 
+    private int getTaskRow(Task task) {
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i) == task)
+                return i;
+        }
+        return -1;
+    }
+
     void clearTasks() {
         tasks.clear();
+        fireTableRowsDeleted(0, 0);
     }
 }

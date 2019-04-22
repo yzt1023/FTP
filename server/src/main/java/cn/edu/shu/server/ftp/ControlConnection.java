@@ -13,6 +13,7 @@ import cn.edu.shu.server.util.ConfigUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class ControlConnection implements Runnable, MsgListener {
@@ -27,12 +28,15 @@ public class ControlConnection implements Runnable, MsgListener {
     private String request;
     private FTPSession session;
     private String encoding;
+    private boolean closed;
 
     ControlConnection(Socket controlSocket) {
         this.controlSocket = controlSocket;
         logger = Logger.getLogger(getClass());
         encoding = "UTF-8";
+//        encoding = "GB2312";
         session = new FTPSession(this);
+        closed = false;
     }
 
     @Override
@@ -43,10 +47,7 @@ public class ControlConnection implements Runnable, MsgListener {
             String welcomeMsg = FTPReplyCode.SERVICE_READY + " " + ConfigUtils.getInstance().getWelcomeMessage();
             println(welcomeMsg);
 
-            session.setControlAddress(controlSocket.getLocalAddress());
-            session.setEncoding(encoding);
-
-            while (!session.isClosed() && readRequest() != null) {
+            while (!closed && readRequest() != null) {
                 FTPRequest ftpRequest = new FTPRequest(request);
                 Command command = CommandFactory.getCommand(ftpRequest.getCommand());
                 command.execute(session, ftpRequest);
@@ -55,12 +56,7 @@ public class ControlConnection implements Runnable, MsgListener {
             e.printStackTrace();
         } finally {
             closeSocket();
-            listener.println("Disconnected");
         }
-    }
-
-    void setListener(MsgListener listener) {
-        this.listener = listener;
     }
 
     @Override
@@ -70,23 +66,56 @@ public class ControlConnection implements Runnable, MsgListener {
         logger.info(reply);
     }
 
-    private String readRequest() throws IOException{
-        request = controlReader.readLine();
-        listener.println(request);
-        logger.info(request);
+    private String readRequest() {
+        try {
+            request = controlReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        if (request != null) {
+            listener.println(request);
+            logger.info(request);
+        }
         return request;
     }
 
     private void closeSocket() {
         try {
-            controlReader.close();
-            controlWriter.close();
+            if (controlReader != null)
+                controlReader.close();
+            if (controlWriter != null)
+                controlWriter.close();
             if (controlSocket != null)
                 controlSocket.close();
             controlSocket = null;
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            e.printStackTrace();
         }
+    }
+
+    public FTPSession getSession() {
+        return session;
+    }
+
+    void shutdown() {
+        try {
+            controlSocket.shutdownInput();
+            controlSocket.shutdownOutput();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    InetAddress getAddress() {
+        return controlSocket.getLocalAddress();
+    }
+
+    void setListener(MsgListener listener) {
+        this.listener = listener;
+    }
+
+    String getEncoding() {
+        return encoding;
     }
 }

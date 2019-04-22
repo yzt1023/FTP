@@ -11,21 +11,24 @@ import cn.edu.shu.common.util.Constants;
 import java.io.File;
 import java.util.Date;
 
-public class Task{
+public class Task {
     private File file;
     private FTPFile ftpFile;
     private Date modifyTime;
     private String state;
     private boolean download;
-    private long size;
-    private int progress;
+    private boolean kb;
+    private String displaySize;
+    private ProgressArg progressArg;
 
-    public Task(File file, FTPFile ftpFile, boolean download){
+    public Task(File file, FTPFile ftpFile, boolean download) {
         this.file = file;
         this.ftpFile = ftpFile;
         this.download = download;
         this.state = Constants.STATE_WAITING;
         this.modifyTime = new Date();
+        this.progressArg = new ProgressArg(0);
+        this.kb = false;
     }
 
     public File getFile() {
@@ -44,7 +47,7 @@ public class Task{
         this.ftpFile = ftpFile;
     }
 
-    Date getModifyTime() {
+    public Date getModifyTime() {
         return modifyTime;
     }
 
@@ -52,7 +55,7 @@ public class Task{
         this.modifyTime = modifyTime;
     }
 
-    String getState() {
+    public String getState() {
         return state;
     }
 
@@ -68,19 +71,40 @@ public class Task{
         this.download = download;
     }
 
-    long getSize() {
-        return size;
+    public String getDisplaySize() {
+        return displaySize;
     }
 
-    public void setSize(long size) {
-        this.size = size;
+    public void setDisplaySize(String displaySize) {
+        this.displaySize = displaySize;
     }
 
-    public void setProgress(int value){
-        this.progress = (int) (value * 100 / size);
+    public ProgressArg getProgressArg() {
+        return progressArg;
     }
 
-    int getProgress() {
-        return progress;
+    public void setMaxValue(long value) {
+        if (value > Integer.MAX_VALUE) {
+            value /= 1024;
+            kb = true;
+        }
+        progressArg.setMaxValue((int) value);
+    }
+
+    public long getSize() {
+        return progressArg.getMaxValue();
+    }
+
+    public long getProgress() {
+        return progressArg.getValue();
+    }
+
+    public void setProgress(long value) {
+        long progress;
+        if (kb)
+            progress = value / 1024;
+        else
+            progress = value;
+        progressArg.setValue((int) progress);
     }
 }

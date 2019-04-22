@@ -8,28 +8,40 @@ package cn.edu.shu.server.ui;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.server.ui.user.UserDialog;
 
 import javax.swing.*;
 import java.util.Calendar;
 
-public class MenuBar extends JMenuBar {
+class MenuBar extends JMenuBar {
 
     private JMenu menuFile;
     private JMenu menuEdit;
     private JMenu menuHelp;
+    private JMenuItem connectItem;
+    private JMenuItem disconnectItem;
     private JMenuItem exitItem;
+    private JMenuItem settingItem;
     private JMenuItem userItem;
     private JMenuItem aboutItem;
+    private MainFrame frame;
     private Utils utils = Utils.getInstance();
 
-    public MenuBar() {
+    public MenuBar(MainFrame frame) {
         super();
+        this.frame = frame;
         initComponents();
     }
 
     private void initComponents() {
         menuFile = new JMenu("File");
         menuFile.setMnemonic('f');
+        connectItem = new JMenuItem("Connect to server");
+        connectItem.setMnemonic('c');
+        menuFile.add(connectItem);
+        disconnectItem = new JMenuItem("Disconnect");
+        disconnectItem.setMnemonic('d');
+        menuFile.add(disconnectItem);
         exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit")));
         exitItem.setMnemonic('x');
         menuFile.add(exitItem);
@@ -40,6 +52,9 @@ public class MenuBar extends JMenuBar {
         userItem = new JMenuItem("User...");
         userItem.setMnemonic('u');
         menuEdit.add(userItem);
+        settingItem = new JMenuItem("Setting...");
+        settingItem.setMnemonic('t');
+        menuEdit.add(settingItem);
         this.add(menuEdit);
 
         menuHelp = new JMenu("Help");
@@ -49,6 +64,20 @@ public class MenuBar extends JMenuBar {
         menuHelp.add(aboutItem);
         this.add(menuHelp);
 
+        connectItem.setEnabled(false);
+
+        connectItem.addActionListener(e -> {
+            frame.getFtpServer().resumeServer();
+            connectItem.setEnabled(false);
+            disconnectItem.setEnabled(true);
+        });
+
+        disconnectItem.addActionListener(e -> {
+            frame.getFtpServer().suspendServer();
+            connectItem.setEnabled(true);
+            disconnectItem.setEnabled(false);
+        });
+
         exitItem.addActionListener(e -> {
             int i = MessageUtils.showConfirmMessage(Constants.CONFIRM_TO_EXIT,
                     "confirm dialog");
@@ -57,7 +86,7 @@ public class MenuBar extends JMenuBar {
         });
 
         userItem.addActionListener(e -> {
-            UserDialog userDialog = new UserDialog();
+            UserDialog userDialog = new UserDialog(frame);
             userDialog.setVisible(true);
         });
 

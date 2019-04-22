@@ -5,8 +5,6 @@ import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -57,17 +55,24 @@ class ConnectPane extends JPanel {
             }
         });
 
-        btnConnect.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if ("connect".equals(btnConnect.getText()))
-                    connect();
-                else {
-                    listener.fireDisconnect();
-                    setInputEnabled(true);
-                    btnConnect.setText(CONNECT);
-                    listener.afterDisconnect();
-                }
+        cbAnonymous.addChangeListener(e -> {
+            if (cbAnonymous.isSelected()) {
+                txtUsername.setEnabled(false);
+                txtPwd.setEnabled(false);
+            } else {
+                txtUsername.setEnabled(true);
+                txtPwd.setEnabled(true);
+            }
+        });
+
+        btnConnect.addActionListener(e -> {
+            if ("connect".equals(btnConnect.getText()))
+                connect();
+            else {
+                listener.fireDisconnect();
+                setInputEnabled(true);
+                btnConnect.setText(CONNECT);
+                listener.afterDisconnect();
             }
         });
 
@@ -81,14 +86,14 @@ class ConnectPane extends JPanel {
         String username = txtUsername.getText();
         char[] password = txtPwd.getPassword();
         if (host.isEmpty()) {
-            MessageUtils.showErrorMessage(Constants.EMPTY_HOST);
+            MessageUtils.showInfoMessage(Constants.EMPTY_HOST);
             return;
         }
         if (!port.isEmpty()) {
             try {
                 portNum = Integer.parseInt(txtPort.getText());
             } catch (NumberFormatException exception) {
-                MessageUtils.showErrorMessage(Constants.INVALID_PORT);
+                MessageUtils.showInfoMessage(Constants.INVALID_PORT);
                 return;
             }
         }
@@ -96,15 +101,21 @@ class ConnectPane extends JPanel {
             afterConnect();
             return;
         }
-        if (!anonymous && username.isEmpty()) {
-            MessageUtils.showErrorMessage(Constants.EMPTY_USER);
-            return;
+        if (!anonymous) {
+            if (username.isEmpty()) {
+                MessageUtils.showInfoMessage(Constants.EMPTY_USER);
+                return;
+            }
+            if (password.length == 0) {
+                MessageUtils.showInfoMessage(Constants.EMPTY_PASSWORD);
+                return;
+            }
+            if (listener.fireConnect(host, portNum, username, new String(password))) {
+                afterConnect();
+                return;
+            }
         }
-        if (!anonymous && listener.fireConnect(host, portNum, username, new String(password))) {
-            afterConnect();
-            return;
-        }
-        MessageUtils.showErrorMessage(Constants.CONNECT_FAILED);
+        MessageUtils.showInfoMessage(Constants.CONNECT_FAILED);
     }
 
     private void afterConnect() {
@@ -179,6 +190,7 @@ class ConnectPane extends JPanel {
         lblUsername.setEnabled(enabled);
         txtPwd.setEnabled(enabled);
         lblPwd.setEnabled(enabled);
+        cbAnonymous.setEnabled(enabled);
     }
 
 }

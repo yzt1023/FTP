@@ -8,19 +8,14 @@ package cn.edu.shu.client.ui.category;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
-import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.client.util.Helper;
 import cn.edu.shu.client.util.TreeUtils;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -118,7 +113,7 @@ public class RemoteCategoryPane extends CategoryPane {
             ctgTree.setSelectionRow(row);
         } else {
             // remote change directory failed
-            MessageUtils.showErrorMessage(Constants.PATH_NOT_EXISTS);
+            MessageUtils.showInfoMessage(Constants.PATH_NOT_EXISTS);
             txtCategory.setText(currentFile.getPath());
         }
     }
@@ -174,14 +169,6 @@ public class RemoteCategoryPane extends CategoryPane {
             enterFolder(file);
         else {
             listener.fireDownload(file, true);
-            // TODO: 3/19/2019 after downloading complete, open file
-            File tempFile = new File(System.getProperty(Constants.TEMP_DIR) + Constants.SEPARATOR + file.getName());
-            try {
-                Desktop.getDesktop().open(tempFile);
-            } catch (IOException e) {
-                MessageUtils.showErrorMessage(Constants.FILE_OPEN_FAILED, Constants.OPEN_FILE_TITLE);
-                e.printStackTrace();
-            }
         }
     }
 
@@ -302,7 +289,7 @@ public class RemoteCategoryPane extends CategoryPane {
         return currentFile;
     }
 
-    public FTPFile[] getFileChildren(FTPFile file) {
+    private FTPFile[] getFileChildren(FTPFile file) {
         if (file.getChildren() == null)
             return ftpClient.getFiles(file);
         else

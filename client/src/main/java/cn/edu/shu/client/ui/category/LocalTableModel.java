@@ -5,6 +5,7 @@
 
 package cn.edu.shu.client.ui.category;
 
+import cn.edu.shu.client.util.TransferUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 import cn.edu.shu.common.util.Utils;
@@ -22,9 +23,11 @@ public class LocalTableModel extends AbstractTableModel {
     private File[] files;
     private String[] columns = {"", "Name", "Date Modified", "Type", "Size"};
     private FileSystemView fileSystemView;
+    private TransferUtils transferUtils;
 
-    LocalTableModel(){
+    LocalTableModel() {
         fileSystemView = FileSystemView.getFileSystemView();
+        transferUtils = TransferUtils.getInstance();
         this.files = new File[0];
     }
 
@@ -41,8 +44,8 @@ public class LocalTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         File file = files[rowIndex];
-        switch(columnIndex){
-            case 0 :
+        switch (columnIndex) {
+            case 0:
                 return fileSystemView.getSystemIcon(file);
             case 1:
                 return fileSystemView.getSystemDisplayName(file);
@@ -52,10 +55,10 @@ public class LocalTableModel extends AbstractTableModel {
             case 3:
                 return fileSystemView.getSystemTypeDescription(file);
             case 4:
-                if(file.isDirectory())
+                if (file.isDirectory())
                     return "";
                 else
-                    return file.length()/Constants.KB + 1 + " KB";
+                    return transferUtils.getFormatSize(file.length());
         }
         return "";
     }
@@ -63,16 +66,16 @@ public class LocalTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         File file = files[rowIndex];
-        if(columnIndex == 1) {
+        if (columnIndex == 1) {
             String newName = (String) aValue;
             if (newName.equals("")) {
-                MessageUtils.showErrorMessage( Constants.EMPTY_FILENAME, Constants.RENAME_FILE_TITLE);
+                MessageUtils.showErrorMessage(Constants.EMPTY_FILENAME, Constants.RENAME_FILE_TITLE);
             } else if (!file.getName().equals(newName)) {
                 File newFile = new File(file.getParent() + Constants.SEPARATOR + newName);
                 if (file.renameTo(newFile)) {
                     files[rowIndex] = newFile;
                     fireTableCellUpdated(rowIndex, columnIndex);
-                }else{
+                } else {
                     MessageUtils.showErrorMessage(Constants.FILE_RENAME_FAILED, Constants.RENAME_FILE_TITLE);
                 }
             }
@@ -80,8 +83,8 @@ public class LocalTableModel extends AbstractTableModel {
     }
 
     @Override
-    public Class getColumnClass(int column){
-        switch (column){
+    public Class getColumnClass(int column) {
+        switch (column) {
             case 0:
                 return Icon.class;
         }
@@ -89,17 +92,11 @@ public class LocalTableModel extends AbstractTableModel {
     }
 
     @Override
-    public String getColumnName(int column){
+    public String getColumnName(int column) {
         return columns[column];
-     }
-
-    void setFiles(File[] files){
-        this.files = files;
-        OrderByName();
-        fireTableDataChanged();
     }
 
-    File getFile(int rowIndex){
+    File getFile(int rowIndex) {
         return files[rowIndex];
     }
 
@@ -122,25 +119,31 @@ public class LocalTableModel extends AbstractTableModel {
         return columnIndex == 1;
     }
 
-    public void addRow(File file){
+    public void addRow(File file) {
         File[] newFiles = Arrays.copyOf(files, files.length + 1);
         newFiles[files.length] = file;
         this.files = newFiles;
         fireTableRowsInserted(files.length - 1, files.length - 1);
     }
 
-    public File[] getFiles(){
+    public File[] getFiles() {
         return files;
+    }
+
+    void setFiles(File[] files) {
+        this.files = files;
+        OrderByName();
+        fireTableDataChanged();
     }
 
     void removeRows(int[] rows) {
         Arrays.sort(rows);
         File[] newFiles = new File[files.length - rows.length];
         int j = 0, k = 0;
-        for(int i = 0; i < files.length; i++){
-            if(j >= rows.length || i != rows[j]){
+        for (int i = 0; i < files.length; i++) {
+            if (j >= rows.length || i != rows[j]) {
                 newFiles[k++] = files[i];
-            }else{
+            } else {
                 j++;
             }
         }

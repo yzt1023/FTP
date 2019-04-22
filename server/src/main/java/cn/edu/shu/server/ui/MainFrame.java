@@ -15,7 +15,6 @@ import java.util.Calendar;
 
 public class MainFrame extends JFrame implements MsgListener {
     private MsgPane msgPane;
-    private MenuBar menuBar;
     private FTPServer ftpServer;
     private static final int DEFAULT_WIDTH = 1000;
     private static final int DEFAULT_HEIGHT = 700;
@@ -31,7 +30,8 @@ public class MainFrame extends JFrame implements MsgListener {
             @Override
             public void windowClosing(WindowEvent e) {
                 DBConnPool.getInstance().clearConns();
-                ftpServer.closeSocket();
+                if(!ftpServer.isStop())
+                    ftpServer.stopServer();
                 System.exit(0);
             }
         });
@@ -41,12 +41,12 @@ public class MainFrame extends JFrame implements MsgListener {
     private void initComponents() {
         msgPane = new MsgPane();
         this.setContentPane(msgPane);
-        menuBar = new MenuBar();
+        MenuBar menuBar = new MenuBar(this);
         this.setJMenuBar(menuBar);
 
-        ftpServer = FTPServer.getFTPSever();
+        ftpServer = new FTPServer();
         ftpServer.setListener(this);
-        ftpServer.listen();
+        ftpServer.start();
     }
 
     public void println(String message){
@@ -54,5 +54,9 @@ public class MainFrame extends JFrame implements MsgListener {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String time = dateFormat.format(calendar.getTime());
         msgPane.println(time + " > " + message);
+    }
+
+    FTPServer getFtpServer() {
+        return ftpServer;
     }
 }

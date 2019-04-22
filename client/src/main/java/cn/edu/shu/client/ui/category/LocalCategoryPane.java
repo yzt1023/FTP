@@ -6,11 +6,9 @@
 package cn.edu.shu.client.ui.category;
 
 import cn.edu.shu.client.listener.TransferListener;
-import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.client.util.Helper;
 import cn.edu.shu.client.util.TreeUtils;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -93,7 +91,7 @@ public class LocalCategoryPane extends CategoryPane {
         }
         File file = new File(path);
         if (!file.exists()) {
-            MessageUtils.showErrorMessage(Constants.PATH_NOT_EXISTS);
+            MessageUtils.showInfoMessage(Constants.PATH_NOT_EXISTS);
             txtCategory.setText(currentFile.getPath());
         } else if (!file.isDirectory()) {
             openFile(file);

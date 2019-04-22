@@ -7,38 +7,32 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
-import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.db.UserDao;
 import cn.edu.shu.server.util.ConfigUtils;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 
 public class FTPSession {
-    private MsgListener listener;
-    private boolean closed;
     private UserDao userDao;
     private User user;
     private String currentPath;
     private String rootPath;
     private File renamedFile;
-    private String encoding;
     private DataType dataType;
-    private InetAddress controlAddress;
     private DataConnection dataConnection;
+    private ControlConnection controlConnection;
     private FileSystemView fileSystemView;
 
-    public FTPSession(MsgListener listener){
-        this.listener = listener;
+    public FTPSession(ControlConnection controlConnection) {
         this.currentPath = "/";
         this.rootPath = ConfigUtils.getInstance().getRootPath();
-        this.closed = false;
         this.userDao = new UserDao();
         this.fileSystemView = FileSystemView.getFileSystemView();
         this.dataConnection = new DataConnection();
+        this.controlConnection = controlConnection;
     }
 
     public User getUser() {
@@ -65,27 +59,19 @@ public class FTPSession {
         this.renamedFile = renamedFile;
     }
 
-    public void println(String message){
-        listener.println(message);
+    public void println(String message) {
+        controlConnection.println(message);
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
-
-    public void close(){
-        this.closed = true;
+    public void close() {
+        controlConnection.shutdown();
     }
 
     public InetAddress getControlAddress() {
-        return controlAddress;
+        return controlConnection.getAddress();
     }
 
-    public void setControlAddress(InetAddress controlAddress) {
-        this.controlAddress = controlAddress;
-    }
-
-    public DataType getDataType() {
+    DataType getDataType() {
         return dataType;
     }
 
@@ -122,12 +108,8 @@ public class FTPSession {
         return absolutePath;
     }
 
-    public String getEncoding() {
-        return encoding;
-    }
-
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
+    String getEncoding() {
+        return controlConnection.getEncoding();
     }
 
     public FileSystemView getFileSystemView() {

@@ -1,6 +1,7 @@
 package cn.edu.shu.common.bean;
 
 public class User {
+    private boolean valid;
     private String username;
     private String password;
     private boolean readable;
@@ -15,9 +16,10 @@ public class User {
         this.password = password;
     }
 
-    public User(String username, String password, boolean readable, boolean writable, boolean deleted) {
+    public User(String username, String password, boolean valid, boolean readable, boolean writable, boolean deleted) {
         this.username = username;
         this.password = password;
+        this.valid = valid;
         this.readable = readable;
         this.writable = writable;
         this.deleted = deleted;
@@ -61,5 +63,13 @@ public class User {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
     }
 }
