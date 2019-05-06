@@ -5,6 +5,9 @@
 
 package cn.edu.shu.client.ui.task;
 
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.MessageUtils;
+
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.Date;
@@ -81,12 +84,14 @@ public class TaskTableModel extends AbstractTableModel {
 
     public void updateProgress(Task task) {
         int row = getTaskRow(task);
-        fireTableCellUpdated(row, 6);
+        if (row != -1)
+            fireTableCellUpdated(row, 6);
     }
 
     public void updateState(Task task) {
         int row = getTaskRow(task);
-        fireTableCellUpdated(row, 5);
+        if (row != -1)
+            fireTableCellUpdated(row, 5);
     }
 
     private int getTaskRow(Task task) {
@@ -98,6 +103,12 @@ public class TaskTableModel extends AbstractTableModel {
     }
 
     void clearTasks() {
+        for (Task task : tasks)
+            if (!Constants.STATE_FAILURE.equals(task.getState()) && !Constants.STATE_SUCCESS.equals(task.getState())) {
+                MessageUtils.showErrorMessage("Tasks cannot be emptied because there are some outstanding tasks", "clear task");
+                return;
+            }
+
         tasks.clear();
         fireTableRowsDeleted(0, 0);
     }

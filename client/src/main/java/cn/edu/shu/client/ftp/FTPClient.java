@@ -219,7 +219,7 @@ public class FTPClient {
         return currentPath;
     }
 
-    public synchronized FTPFile[] getFiles(FTPFile parent) {
+    public synchronized List<FTPFile> getFiles(FTPFile parent) {
         try {
             Socket socket = establishDataConnection(FTPCommand.MLSD + " " + parent.getPath());
             if (socket == null)
@@ -237,14 +237,12 @@ public class FTPClient {
                 FTPFile child = parseMLSD(line, parent);
                 files.add(child);
             }
+            parent.setChildren(files);
+
             reader.close();
             socket.close();
-
             readReply(); // after transfer
-            FTPFile[] ftpFiles = new FTPFile[files.size()];
-            files.toArray(ftpFiles);
-            parent.setChildren(ftpFiles);
-            return ftpFiles;
+            return files;
         } catch (IOException e) {
             MessageUtils.showInfoMessage("Data stream transfer failed!");
             logger.error(e.getMessage(), e);
@@ -323,8 +321,14 @@ public class FTPClient {
         Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
         if (socket == null)
             return null;
-//        sendCommand(FTPCommand.TYPE + " " + type);
         readReply();
+        if (restartOffset > 0L) {
+            sendCommand(FTPCommand.REST + " " + restartOffset);
+            readReply();
+            if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
+                return null;
+        }
+
         sendCommand(FTPCommand.STOR + " " + filename);
         readReply();
         if (!FTPReplyCode.find(getReplyCode()).isReady()) {
@@ -342,7 +346,6 @@ public class FTPClient {
         Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
         if (socket == null)
             return null;
-//        sendCommand(FTPCommand.TYPE + " " + type);
         readReply();
         sendCommand(FTPCommand.APPE + " " + filename);
         readReply();
@@ -393,6 +396,16 @@ public class FTPClient {
         return FTPReplyCode.find(getReplyCode()).isOkay();
     }
 
+    public synchronized long getFileSize(String filePath){
+        sendCommand(FTPCommand.SIZE + " " + filePath);
+        readReply();
+        if(FTPReplyCode.find(getReplyCode()).isOkay()) {
+            String size = response.substring(response.indexOf(" ") + 1);
+            return Long.parseLong(size);
+        }
+        return -1;
+    }
+
     public synchronized boolean noop() {
         sendCommand(FTPCommand.NOOP);
         readReply();
@@ -430,13 +443,13 @@ public class FTPClient {
     }
 
     private FTPFile parseMLSD(String line, FTPFile parent) {
-        FTPFile file = new FTPFile(parent);
+        String name = line.substring(line.lastIndexOf(";") + 2, line.length());
+        FTPFile file = new FTPFile(parent, name);
         Date date = utils.parseDate(getValue(line, Constants.KEY_MODIFY));
         file.setLastChanged(date);
         file.setType(getValue(line, Constants.KEY_TYPE));
         if (!file.isDirectory())
             file.setSize(Long.parseLong(getValue(line, Constants.KEY_SIZE)));
-        file.setName(line.substring(line.lastIndexOf(";") + 2, line.length()));
         file.setPath(utils.getPath(parent.getPath(), file.getName()));
         return file;
     }

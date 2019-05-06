@@ -21,6 +21,7 @@ public class FTPSession {
     private String currentPath;
     private String rootPath;
     private File renamedFile;
+    private long offset;
     private DataType dataType;
     private DataConnection dataConnection;
     private ControlConnection controlConnection;
@@ -28,6 +29,7 @@ public class FTPSession {
 
     public FTPSession(ControlConnection controlConnection) {
         this.currentPath = "/";
+        this.offset = 0L;
         this.rootPath = ConfigUtils.getInstance().getRootPath();
         this.userDao = new UserDao();
         this.fileSystemView = FileSystemView.getFileSystemView();
@@ -59,6 +61,14 @@ public class FTPSession {
         this.renamedFile = renamedFile;
     }
 
+    public long getOffset() {
+        return offset;
+    }
+
+    public void setOffset(long offset) {
+        this.offset = offset;
+    }
+
     public void println(String message) {
         controlConnection.println(message);
     }
@@ -71,7 +81,7 @@ public class FTPSession {
         return controlConnection.getAddress();
     }
 
-    DataType getDataType() {
+    public DataType getDataType() {
         return dataType;
     }
 

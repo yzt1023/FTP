@@ -51,7 +51,7 @@ public class Utils {
         UIManager.put("MenuBar.font", font);
         UIManager.put("Menu.font", font);
         UIManager.put("TextField.font", font);
-        UIManager.put("TextArea.font", font);
+        UIManager.put("TextArea.font", new Font("SimSun", Font.PLAIN, 18));
         UIManager.put("PasswordField.font", font);
         UIManager.put("CheckBox.font", font);
         try {

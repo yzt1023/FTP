@@ -6,6 +6,7 @@
 package cn.edu.shu.client.ui.task;
 
 import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
 
 public class TaskPane extends JPanel {
     private TaskTableModel tableModel;
+    private Utils utils = Utils.getInstance();
 
     public TaskPane() {
         super();
@@ -35,16 +37,20 @@ public class TaskPane extends JPanel {
         JPopupMenu popupMenu = new JPopupMenu();
 
         // pause
-        JMenuItem pauseItem = new JMenuItem("Pause");
+        JMenuItem pauseItem = new JMenuItem("Pause", new ImageIcon(utils.getResourcePath(getClass(), "pause.png")));
         pauseItem.addActionListener(e -> {
-
+            Task task = tableModel.getTask(taskTable.getSelectedRow());
+            task.setState(Constants.STATE_PAUSE);
+            tableModel.updateState(task);
         });
         popupMenu.add(pauseItem);
 
         // continue
-        JMenuItem continueItem = new JMenuItem("Continue");
+        JMenuItem continueItem = new JMenuItem("Continue", new ImageIcon(utils.getResourcePath(getClass(), "continue.png")));
         continueItem.addActionListener(e -> {
-
+            Task task = tableModel.getTask(taskTable.getSelectedRow());
+            task.setState(Constants.STATE_WAITING);
+            tableModel.updateState(task);
         });
         popupMenu.add(continueItem);
 
@@ -63,12 +69,8 @@ public class TaskPane extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {
-                    int row = taskTable.rowAtPoint(e.getPoint());
-                    Task task = tableModel.getTask(row);
-                    if (Constants.STATE_PROCESSING.equals(task.getState()) || Constants.STATE_WAITING.equals(task.getState()))
-                        pauseItem.setEnabled(true);
-                    if (Constants.STATE_PAUSE.equals(task.getState()))
-                        continueItem.setEnabled(true);
+                    pauseItem.setEnabled(false);
+                    continueItem.setEnabled(false);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -78,8 +80,21 @@ public class TaskPane extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {
-                    pauseItem.setEnabled(false);
-                    continueItem.setEnabled(false);
+                    int row = taskTable.rowAtPoint(e.getPoint());
+                    taskTable.setRowSelectionInterval(row, row);
+                    Task task = tableModel.getTask(row);
+                    if (Constants.STATE_PROCESSING.equals(task.getState()) || Constants.STATE_WAITING.equals(task.getState())) {
+                        pauseItem.setEnabled(true);
+                        continueItem.setEnabled(false);
+                    }
+                    if (Constants.STATE_PAUSE.equals(task.getState())) {
+                        continueItem.setEnabled(true);
+                        pauseItem.setEnabled(false);
+                    }
+                    if(Constants.STATE_SUCCESS.equals(task.getState()) || Constants.STATE_FAILURE.equals(task.getState())){
+                        pauseItem.setEnabled(false);
+                        continueItem.setEnabled(false);
+                    }
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }

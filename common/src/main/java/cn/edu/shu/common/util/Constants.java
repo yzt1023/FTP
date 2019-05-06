@@ -61,6 +61,4 @@ public interface Constants {
     String STATE_PAUSE = "PAUSE";
     String STATE_FAILURE = "FAILURE";
     String STATE_SUCCESS = "SUCCESS";
-    String STATE_CANCEL = "CANCEL";
-
 }

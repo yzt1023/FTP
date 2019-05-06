@@ -7,7 +7,9 @@ import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class FTPFile {
     private String name;
@@ -18,7 +20,7 @@ public class FTPFile {
     private Icon icon;
     private String path;
     private FTPFile parent;
-    private FTPFile[] children;
+    private List<FTPFile> children;
 
     public FTPFile(){}
 
@@ -26,12 +28,10 @@ public class FTPFile {
         this.path = path;
     }
 
-    public FTPFile(FTPFile parent){
+    public FTPFile(FTPFile parent, String name){
         this.parent = parent;
+        this.name = name;
     }
-
-    // TODO: 2019/3/13 permission(read/write/execute)
-    // TODO: 2019/3/13 access(group/user/world)
 
     public String getName() {
         return name;
@@ -93,11 +93,11 @@ public class FTPFile {
         this.parent = parent;
     }
 
-    public FTPFile[] getChildren() {
+    public List<FTPFile> getChildren() {
         return children;
     }
 
-    public void setChildren(FTPFile[] children) {
+    public void setChildren(List<FTPFile> children) {
         this.children = children;
     }
 
@@ -107,4 +107,16 @@ public class FTPFile {
                 return file;
         return null;
     }
+
+    public void addChild(FTPFile file){
+        if(children == null){
+            children = new ArrayList<>();
+        }
+        children.add(file);
+    }
+
+    public void removeChild(FTPFile file){
+        children.remove(file);
+    }
+
 }

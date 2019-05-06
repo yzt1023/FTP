@@ -35,7 +35,7 @@ public class MenuBar extends JMenuBar {
         // file
         menuFile = new JMenu("File");
         menuFile.setMnemonic('f');
-        exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit")));
+        exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit.png")));
         exitItem.setMnemonic('x');
         menuFile.add(exitItem);
         this.add(menuFile);

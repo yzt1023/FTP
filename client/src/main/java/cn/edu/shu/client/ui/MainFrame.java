@@ -4,8 +4,7 @@ import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.ConnectListener;
 import cn.edu.shu.client.listener.TransferListener;
-import cn.edu.shu.client.thread.DownloadThread;
-import cn.edu.shu.client.thread.UploadThread;
+import cn.edu.shu.client.thread.TransferThread;
 import cn.edu.shu.client.ui.category.LocalCategoryPane;
 import cn.edu.shu.client.ui.category.RemoteCategoryPane;
 import cn.edu.shu.client.ui.task.Task;
@@ -20,9 +19,9 @@ import cn.edu.shu.common.util.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.Date;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
 
 public class MainFrame extends JFrame implements TransferListener, ConnectListener, MsgListener {
 
@@ -37,8 +36,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private TaskPane taskPane;
     private MenuBar menuBar;
     private FTPClient ftpClient;
-    private Deque<Task> downloadQueue;
-    private Queue<Task> uploadQueue;
+    private Deque<Task> taskQueue;
     private Utils utils;
     private TransferUtils transferUtils;
 
@@ -52,8 +50,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
         this.setIconImage(icon);
 
-        downloadQueue = new LinkedList<>();
-        uploadQueue = new LinkedList<>();
+        taskQueue = new LinkedList<>();
 
         initComponents();
         setGroupLayout();
@@ -120,15 +117,19 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
         if (tempDir)
-            downloadQueue.offerFirst(task);
+            taskQueue.offerFirst(task);
         else
-            downloadQueue.offerLast(task);
+            taskQueue.offerLast(task);
     }
 
     @Override
     public void fireUpload(File file) {
         FTPFile parent = remoteCategoryPane.getCurrentFile();
-        FTPFile ftpFile = new FTPFile(parent);
+        if (parent.getChild(file.getName()) != null) {
+            MessageUtils.showInfoMessage(Constants.FILE_EXISTS);
+            return;
+        }
+        FTPFile ftpFile = new FTPFile(parent, file.getName());
         String path = utils.getPath(parent.getPath(), file.getName());
         ftpFile.setPath(path);
         Task task = new Task(file, ftpFile, false);
@@ -136,7 +137,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         task.setMaxValue(size);
         task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
-        uploadQueue.offer(task);
+        taskQueue.offerLast(task);
     }
 
     @Override
@@ -162,6 +163,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
             else
                 localCategoryPane.getTableModel().addRow(task.getFile());
         } else {
+            remoteCategoryPane.getCurrentFile().addChild(task.getFtpFile());
             remoteCategoryPane.getTableModel().addRow(task.getFtpFile());
         }
     }
@@ -191,10 +193,8 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     public void afterConnect() {
         remoteCategoryPane.afterConnect();
         menuBar.afterConnect();
-        DownloadThread downloadThread = new DownloadThread(downloadQueue, ftpClient, this);
+        TransferThread downloadThread = new TransferThread(taskQueue, ftpClient, this);
         downloadThread.start();
-        UploadThread uploadThread = new UploadThread(this.uploadQueue, this.ftpClient, this);
-        uploadThread.start();
     }
 
     @Override

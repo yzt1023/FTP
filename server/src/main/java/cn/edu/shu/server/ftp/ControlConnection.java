@@ -5,6 +5,7 @@
 
 package cn.edu.shu.server.ftp;
 
+import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.server.command.Command;
@@ -73,9 +74,12 @@ public class ControlConnection implements Runnable, MsgListener {
             e.printStackTrace();
             return null;
         }
-        if (request != null) {
-            listener.println(request);
-            logger.info(request);
+        if (request != null){
+            if(request.startsWith(FTPCommand.PASS)){
+                listener.println(FTPCommand.PASS + " ******");
+            }else {
+                listener.println(request);
+            }
         }
         return request;
     }

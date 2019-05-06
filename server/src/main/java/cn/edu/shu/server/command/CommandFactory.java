@@ -23,7 +23,6 @@ public class CommandFactory {
     static {
 /*        commandMap.put("ABOR", new ABOR());
         commandMap.put("ACCT", new ACCT());
-        commandMap.put("APPE", new APPE());
         commandMap.put("AUTH", new AUTH());
         commandMap.put("EPRT", new EPRT());
         commandMap.put("EPSV", new EPSV());
@@ -42,13 +41,12 @@ public class CommandFactory {
         commandMap.put("PBSZ", new PBSZ());
         commandMap.put("PROT", new PROT());
         commandMap.put("REIN", new REIN());
-        commandMap.put("REST", new REST());
         commandMap.put("SITE", new SITE());
-        commandMap.put("SIZE", new SIZE());
         commandMap.put("STAT", new STAT());
         commandMap.put("STOU", new STOU());
         commandMap.put("STRU", new STRU());
         commandMap.put("SYST", new SYST());*/
+        commandMap.put("APPE", new APPE());
         commandMap.put(FTPCommand.CDUP, new CDUP());
         commandMap.put(FTPCommand.CWD, new CWD());
         commandMap.put(FTPCommand.DELE, new DELE());
@@ -65,6 +63,8 @@ public class CommandFactory {
         commandMap.put(FTPCommand.RNFR, new RNFR());
         commandMap.put(FTPCommand.RNTO, new RNTO());
         commandMap.put(FTPCommand.REG, new REG());
+        commandMap.put(FTPCommand.REST, new REST());
+        commandMap.put(FTPCommand.SIZE, new SIZE());
         commandMap.put(FTPCommand.STOR, new STOR());
         commandMap.put(FTPCommand.TYPE, new TYPE());
         commandMap.put(FTPCommand.USER, new USER());

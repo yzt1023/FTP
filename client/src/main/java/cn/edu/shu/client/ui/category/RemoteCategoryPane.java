@@ -18,6 +18,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class RemoteCategoryPane extends CategoryPane {
 
@@ -57,7 +58,7 @@ public class RemoteCategoryPane extends CategoryPane {
     @Override
     void loadChildrenNode(FileTreeNode node) {
         FTPFile file = (FTPFile) node.getUserObject();
-        FTPFile[] subFiles = getFileChildren(file);
+        List<FTPFile> subFiles = getFileChildren(file);
         for (FTPFile subFile : subFiles)
             if (subFile.isDirectory())
                 node.add(new FileTreeNode(subFile));
@@ -67,7 +68,7 @@ public class RemoteCategoryPane extends CategoryPane {
     void reloadChildrenNode(FileTreeNode node) {
         node.removeAllChildren();
         FTPFile file = (FTPFile) node.getUserObject();
-        FTPFile[] subFiles = ftpClient.getFiles(file);
+        List<FTPFile> subFiles = ftpClient.getFiles(file);
         for (FTPFile subFile : subFiles)
             if (subFile.isDirectory())
                 node.add(new FileTreeNode(subFile));
@@ -204,6 +205,8 @@ public class RemoteCategoryPane extends CategoryPane {
                 if (!deleteFolder(file)) {
                     MessageUtils.showErrorMessage(Constants.FILE_DELETE_FAILED, Constants.DELETE_FILE_TITLE);
                     break;
+                } else {
+                    currentFile.removeChild(file);
                 }
             }
             tableModel.removeRows(Arrays.copyOfRange(rows, 0, j));
@@ -212,17 +215,15 @@ public class RemoteCategoryPane extends CategoryPane {
 
     private boolean deleteFolder(FTPFile dir) {
         if (dir.isDirectory()) {
-            FTPFile[] files = ftpClient.getFiles(dir);
+            List<FTPFile> files = ftpClient.getFiles(dir);
             for (FTPFile file : files) {
                 boolean success = deleteFolder(file);
                 if (!success)
                     return false;
             }
             return ftpClient.removeDirectory(dir.getPath());
-        } else {
-            return ftpClient.delete(dir.getPath());
         }
-
+        return ftpClient.delete(dir.getPath());
     }
 
     @Override
@@ -230,12 +231,12 @@ public class RemoteCategoryPane extends CategoryPane {
         String newName = Constants.INIT_NAME + utils.formatDate(new Date());
         String path = utils.getPath(currentFile.getPath(), newName);
         if (ftpClient.makeDirectory(path)) {
-            FTPFile file = new FTPFile(currentFile);
+            FTPFile file = new FTPFile(currentFile, newName);
             file.setPath(path);
-            file.setName(newName);
             file.setType(Constants.FILE_FOLDER);
             file.setLastChanged(new Date());
             tableModel.addRow(file);
+            currentFile.addChild(file);
             int row = tableModel.getRowCount() - 1;
             ctgTable.setRowSelectionInterval(row, row);
             ctgTable.editCellAt(row, 1);
@@ -262,8 +263,7 @@ public class RemoteCategoryPane extends CategoryPane {
     public void afterConnect() {
         setEnabled(true);
         // get remote home dir
-        home = new FTPFile();
-        home.setPath(ftpClient.printWorkingDir());
+        home = new FTPFile(ftpClient.printWorkingDir());
         home.setName(home.getPath());
         home.setType(Constants.FILE_FOLDER);
         home.setParent(null);
@@ -279,7 +279,7 @@ public class RemoteCategoryPane extends CategoryPane {
     }
 
     private void clearData() {
-        tableModel.setFiles(new FTPFile[0]);
+        tableModel.clearFiles();
         DefaultTreeModel treeModel = (DefaultTreeModel) ctgTree.getModel();
         treeModel.setRoot(null);
         txtCategory.setText("");
@@ -289,7 +289,7 @@ public class RemoteCategoryPane extends CategoryPane {
         return currentFile;
     }
 
-    private FTPFile[] getFileChildren(FTPFile file) {
+    private List<FTPFile> getFileChildren(FTPFile file) {
         if (file.getChildren() == null)
             return ftpClient.getFiles(file);
         else

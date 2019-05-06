@@ -22,6 +22,7 @@ import java.util.Date;
 public class MLSD implements Command {
 
     private Logger logger = Logger.getLogger(getClass());
+    private FileSystemView fileSystemView = FileSystemView.getFileSystemView();
 
     public MLSD() {
     }
@@ -42,7 +43,7 @@ public class MLSD implements Command {
         String current = session.getCurrentPath(path);
         File file = new File(path);
 
-        if (!file.exists() || !file.isDirectory()) {
+        if (!file.exists()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Directory not found");
             return ;
         }
@@ -51,17 +52,11 @@ public class MLSD implements Command {
         DataConnection dataConnection = session.getDataConnection();
         FileSystemView fileSystemView = session.getFileSystemView();
         StringBuilder builder = new StringBuilder();
-
-        for (File f : fileSystemView.getFiles(file, false)) {
-            String type = fileSystemView.getSystemTypeDescription(f);
-            builder.append(Constants.KEY_TYPE).append(type);
-            Date date = new Date(f.lastModified());
-            String modify = Utils.getInstance().formatDate(date);
-            builder.append(";").append(Constants.KEY_MODIFY).append(modify);
-            if (!f.isDirectory())
-                builder.append(";").append(Constants.KEY_SIZE).append(f.length());
-            builder.append("; ").append(f.getName());
-            builder.append(Constants.LINE_SEPARATOR);
+        if(file.isFile())
+            builder.append(formatFile(file));
+        else {
+            for (File f : fileSystemView.getFiles(file, false))
+                builder.append(formatFile(f));
         }
 
         try {
@@ -72,8 +67,29 @@ public class MLSD implements Command {
             return;
         }
 
-        dataConnection.transferToClient(session, builder.toString());
-        dataConnection.closeConnection();
+        try {
+            dataConnection.transferToClient(session, builder.toString());
+        }catch (IOException e){
+            logger.error(e.getMessage(), e);
+            session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
+            return;
+        }finally {
+            dataConnection.closeConnection();
+        }
+
         session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));
+    }
+
+    private String formatFile(File f) {
+        String line = "";
+        String type = fileSystemView.getSystemTypeDescription(f);
+        line += Constants.KEY_TYPE + type;
+        Date date = new Date(f.lastModified());
+        String modify = Utils.getInstance().formatDate(date);
+        line += ";" + Constants.KEY_MODIFY + modify;
+        if (!f.isDirectory())
+            line += ";" + Constants.KEY_SIZE + f.length();
+        line += "; " + f.getName() + Constants.LINE_SEPARATOR;
+        return line;
     }
 }

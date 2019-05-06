@@ -5,7 +5,6 @@
 
 package cn.edu.shu.server.command.impl;
 
-import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.DataConnection;
@@ -13,18 +12,21 @@ import cn.edu.shu.server.ftp.FTPRequest;
 import cn.edu.shu.server.ftp.FTPSession;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
-public class RETR implements Command {
+public class APPE implements Command {
 
     private Logger logger = Logger.getLogger(getClass());
 
-    public RETR() {
+    public APPE() {
     }
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
-        if (!session.getUser().isReadable()) {
+        if (!session.getUser().isWritable()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Permission denied");
             return;
         }
@@ -34,43 +36,30 @@ public class RETR implements Command {
             return;
         }
 
-        String path = session.getAbsolutePath(request.getArgument());
-        String current = session.getCurrentPath(path);
-        File file = new File(path);
-
-        if (!file.exists() || file.isDirectory()) {
-            session.println(FTPReplyCode.FILE_UNAVAILABLE + " No such file or directory");
-            return;
-        }
-
         if (session.getDataConnection().getSocketAddress() == null) {
             session.println(FTPReplyCode.BAD_SEQUENCE.getReply());
             return;
         }
+
+        String path = session.getAbsolutePath(request.getArgument());
+        String current = session.getCurrentPath(path);
+        File file = new File(path);
+
+        if (!file.exists() && (file.getParentFile() == null || !file.getParentFile().exists())) {
+            session.println(FTPReplyCode.FILE_UNAVAILABLE + " Invalid path");
+            return;
+        }
         session.println(FTPReplyCode.FILE_STATUS_OK.getReply().replaceFirst("\\?", current));
-
         DataConnection dataConnection = session.getDataConnection();
-        try {
-            long len = session.getOffset();
-            InputStream inputStream;
 
-            if (session.getDataType() == DataType.ASCII) {
-                long offset = 0L;
-                inputStream = new BufferedInputStream(new FileInputStream(file));
-                while (offset++ < len) {
-                    int c;
-                    if ((c = inputStream.read()) == -1) {
-                        throw new IOException("Cannot skip");
-                    }
-                    if (c == '\n') {
-                        ++offset;
-                    }
-                }
-            } else {
-                RandomAccessFile raf = new RandomAccessFile(file, "r");
-                raf.seek(len);
-                inputStream = new FileInputStream(raf.getFD());
-            }
+        try {
+            long offset = 0L;
+            if (file.exists())
+                offset = file.length();
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            raf.seek(offset);
+
+            FileOutputStream outputStream = new FileOutputStream(raf.getFD());
 
             try {
                 dataConnection.openConnection();
@@ -80,17 +69,18 @@ public class RETR implements Command {
                 return;
             }
 
-            dataConnection.transferToClient(session, inputStream);
+            dataConnection.transferFromClient(session, outputStream);
 
-            inputStream.close();
+            outputStream.close();
+            raf.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
             return;
-        }finally {
-            session.setOffset(0);
+        } finally {
             dataConnection.closeConnection();
         }
         session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));
+
     }
 }

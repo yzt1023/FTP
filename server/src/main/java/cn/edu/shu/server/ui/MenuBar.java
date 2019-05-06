@@ -42,7 +42,7 @@ class MenuBar extends JMenuBar {
         disconnectItem = new JMenuItem("Disconnect");
         disconnectItem.setMnemonic('d');
         menuFile.add(disconnectItem);
-        exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit")));
+        exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit.png")));
         exitItem.setMnemonic('x');
         menuFile.add(exitItem);
         this.add(menuFile);

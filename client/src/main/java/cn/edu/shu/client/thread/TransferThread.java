@@ -9,21 +9,22 @@ import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
+import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.Utils;
 import org.apache.log4j.Logger;
 
 import javax.swing.filechooser.FileSystemView;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.Date;
 import java.util.Queue;
 
-public abstract class TransferThread extends Thread {
+public class TransferThread extends Thread {
     private Queue<Task> queue;
-    FTPClient ftpClient;
+    private FTPClient ftpClient;
     private TransferListener listener;
-    FileSystemView fileSystemView = FileSystemView.getFileSystemView();
-    public Utils utils = Utils.getInstance();
+    private FileSystemView fileSystemView = FileSystemView.getFileSystemView();
+    private Utils utils = Utils.getInstance();
     private Logger logger = Logger.getLogger(getClass());
     public Task task;
 
@@ -42,6 +43,12 @@ public abstract class TransferThread extends Thread {
                 if (task == null)
                     continue;
 
+                if(Constants.STATE_PAUSE.equals(task.getState())) {
+                    queue.remove();
+                    queue.offer(task);
+                    continue;
+                }
+
                 task.setState(Constants.STATE_PROCESSING);
                 listener.beforeTransfer(task);
                 boolean result = false;
@@ -55,7 +62,6 @@ public abstract class TransferThread extends Thread {
                     logger.error(e.getMessage(), e);
                 } finally {
                     updateState(result);
-                    listener.afterTransfer(task);
                 }
                 queue.remove();
             } catch (Exception e) {
@@ -64,12 +70,111 @@ public abstract class TransferThread extends Thread {
         }
     }
 
-    public boolean download(File file, FTPFile ftpFile) throws IOException{
-        return true;
+    private boolean download(File file, FTPFile ftpFile) throws IOException{
+        if (!ftpFile.isDirectory()) {
+            if(file.exists() && file.length() == ftpFile.getSize())
+                return true;
+
+            long offset = file.length();
+            ftpClient.setRestartOffset(offset);
+            InputStream inputStream = ftpClient.getRetrStream(ftpFile.getPath());
+            if (inputStream == null)
+                return false;
+
+            BufferedInputStream in = new BufferedInputStream(inputStream);
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            raf.seek(offset);
+            FileOutputStream out = new FileOutputStream(raf.getFD());
+            byte[] bytes = new byte[Constants.KB];
+            int len;
+            long read = offset;
+            boolean lastWasCR = false;
+            while ((len = in.read(bytes)) != -1) {
+                if(Constants.STATE_PAUSE.equals(task.getState()))
+                    break;
+                if (ftpClient.getDataType() == DataType.BINARY || utils.noConversionRequired())
+                    out.write(bytes, 0, len);
+                else {
+                    for (byte b : bytes)
+                        lastWasCR = utils.fromNetWrite(lastWasCR, out, b);
+                }
+                read += len;
+                notifyProgress(len);
+            }
+            out.close();
+            raf.close();
+            in.close();
+            ftpClient.readReply();
+            return read == ftpFile.getSize();
+        } else {
+            if (!file.exists() && !file.mkdir())
+                return false;
+            for (FTPFile f : ftpFile.getChildren()) {
+                File child = new File(file, f.getName());
+                boolean success = download(child, f);
+                if (!success)
+                    return false;
+            }
+            return true;
+        }
     }
 
-    public boolean upload(File file, FTPFile ftpFile) throws IOException{
-        return true;
+    private boolean upload(File file, FTPFile ftpFile) throws IOException{
+        //set ftp info
+        ftpFile.setLastChanged(new Date());
+        ftpFile.setType(fileSystemView.getSystemTypeDescription(file));
+        if (file.isFile()) {
+            long offset = ftpClient.getFileSize(ftpFile.getPath());
+            if(offset == file.length())
+                return true;
+
+            OutputStream outputStream = ftpClient.getAppeStream(ftpFile.getPath());
+            if (outputStream == null)
+                return false;
+
+            BufferedOutputStream out = new BufferedOutputStream(outputStream);
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            if(offset == -1)
+                offset = 0;
+            raf.seek(offset);
+            FileInputStream in = new FileInputStream(raf.getFD());
+            byte[] bytes = new byte[Constants.KB];
+            int len;
+            long read = offset;
+            boolean lastWasCR = false;
+            while ((len = in.read(bytes)) != -1) {
+                if(Constants.STATE_PAUSE.equals(task.getState()))
+                    break;
+                if (ftpClient.getDataType() == DataType.BINARY)
+                    out.write(bytes, 0, len);
+                else {
+                    for (byte b : bytes) {
+                        lastWasCR = utils.toNetWrite(lastWasCR, out, b);
+                    }
+                }
+                read += len;
+                notifyProgress(len);
+            }
+            ftpFile.setSize(read);
+            out.flush();
+            out.close();
+            in.close();
+            raf.close();
+            ftpClient.readReply();
+            return read == file.length();
+        } else {
+            if (ftpClient.getFileSize(ftpFile.getPath()) == -1 && !ftpClient.makeDirectory(ftpFile.getPath()))
+                return false;
+            for (File f : fileSystemView.getFiles(file, false)) {
+                FTPFile child = new FTPFile(ftpFile, f.getName());
+                String path = utils.getPath(ftpFile.getPath(), f.getName());
+                child.setPath(path);
+                boolean success = upload(f, child);
+                if (!success)
+                    return false;
+            }
+            return true;
+        }
     }
 
     private void updateState(boolean result) {
@@ -81,11 +186,17 @@ public abstract class TransferThread extends Thread {
             }
             task.setState(Constants.STATE_SUCCESS);
         }
-        else
+        else{
+            if(Constants.STATE_PAUSE.equals(task.getState())) {
+                queue.offer(task);
+                return;
+            }
             task.setState(Constants.STATE_FAILURE);
+        }
+        listener.afterTransfer(task);
     }
 
-    void notifyProgress(long progress){
+    private void notifyProgress(long progress){
         task.setProgress(progress + task.getProgress());
         listener.notifyProgress(task);
     }

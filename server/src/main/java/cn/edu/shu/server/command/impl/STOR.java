@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class STOR implements Command {
 
@@ -52,15 +53,28 @@ public class STOR implements Command {
         DataConnection dataConnection = session.getDataConnection();
 
         try {
+            long offset = session.getOffset();
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            raf.setLength(offset);
+            raf.seek(offset);
             FileOutputStream outputStream = new FileOutputStream(file);
-            dataConnection.openConnection();
+
+            try {
+                dataConnection.openConnection();
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
+                return;
+            }
+
             dataConnection.transferFromClient(session, outputStream);
             outputStream.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
+            session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
             return;
         } finally {
+            session.setOffset(0);
             dataConnection.closeConnection();
         }
         session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));

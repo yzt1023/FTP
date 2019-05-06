@@ -45,7 +45,7 @@ public class DataConnection {
         return socketAddress;
     }
 
-    public void openConnection() throws IOException{
+    public void openConnection() throws IOException {
         if (passiveMode) {
             dataSocket = serverSocket.accept();
         } else {
@@ -67,64 +67,48 @@ public class DataConnection {
         }
     }
 
-    public void transferToClient(FTPSession session, InputStream in) {
-        try {
-            OutputStream out = dataSocket.getOutputStream();
-            transfer(session, true, in, out);
-            out.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+    public void transferToClient(FTPSession session, InputStream in) throws IOException {
+        OutputStream out = dataSocket.getOutputStream();
+        transfer(session, true, in, out);
+        out.close();
     }
 
-    public void transferToClient(FTPSession session, String line) {
-        try {
-            OutputStream out = dataSocket.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out, session.getEncoding());
-            writer.write(line);
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+    public void transferToClient(FTPSession session, String line) throws IOException {
+        OutputStream out = dataSocket.getOutputStream();
+        OutputStreamWriter writer = new OutputStreamWriter(out, session.getEncoding());
+        writer.write(line);
+        writer.flush();
+        writer.close();
     }
 
-    public void transferFromClient(FTPSession session, OutputStream out) {
-        try {
-            InputStream in = dataSocket.getInputStream();
-            transfer(session, false, in, out);
-            in.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+    public void transferFromClient(FTPSession session, OutputStream out) throws IOException {
+        InputStream in = dataSocket.getInputStream();
+        transfer(session, false, in, out);
+        in.close();
     }
 
-    private void transfer(FTPSession session, boolean isWrite, InputStream in, OutputStream out) {
+    private void transfer(FTPSession session, boolean isWrite, InputStream in, OutputStream out) throws IOException {
         byte[] bytes = new byte[Constants.KB];
         boolean lastWasCR = false;
         BufferedInputStream bis = new BufferedInputStream(in);
         BufferedOutputStream bos = new BufferedOutputStream(out);
-        try {
-            int len;
-            while ((len = bis.read(bytes)) != -1) {
-                if (session.getDataType() == DataType.BINARY)
-                    bos.write(bytes, 0, len);
-                else if(isWrite) {
-                    for (byte b : bytes) {
-                        lastWasCR = utils.toNetWrite(lastWasCR, bos, b);
-                    }
-                }else if(utils.noConversionRequired()) {
-                    bos.write(bytes, 0, len);
-                }else {
-                    for (byte b : bytes) {
-                        lastWasCR = utils.fromNetWrite(lastWasCR, bos, b);
-                    }
+        int len;
+        while ((len = bis.read(bytes)) != -1) {
+            if (session.getDataType() == DataType.BINARY)
+                bos.write(bytes, 0, len);
+            else if (isWrite) {
+                for (byte b : bytes) {
+                    lastWasCR = utils.toNetWrite(lastWasCR, bos, b);
+                }
+            } else if (utils.noConversionRequired()) {
+                bos.write(bytes, 0, len);
+            } else {
+                for (byte b : bytes) {
+                    lastWasCR = utils.fromNetWrite(lastWasCR, bos, b);
                 }
             }
-            bos.flush();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
         }
+        bos.flush();
     }
 
 

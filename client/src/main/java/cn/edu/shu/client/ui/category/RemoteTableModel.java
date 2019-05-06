@@ -13,24 +13,26 @@ import cn.edu.shu.common.util.Utils;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class RemoteTableModel extends AbstractTableModel {
 
-    private FTPFile[] files;
+    private List<FTPFile> files;
     private String[] columns = {"", "Name", "Date Modified", "Type", "Size"};
     private RemoteCategoryPane categoryPane;
     private TransferUtils transferUtils;
 
     RemoteTableModel(RemoteCategoryPane categoryPane) {
-        this.files = new FTPFile[0];
+        this.files = new ArrayList<>();
         this.categoryPane = categoryPane;
         transferUtils = TransferUtils.getInstance();
     }
 
     @Override
     public int getRowCount() {
-        return files.length;
+        return files.size();
     }
 
     @Override
@@ -40,7 +42,7 @@ public class RemoteTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        FTPFile file = files[rowIndex];
+        FTPFile file = files.get(rowIndex);
         switch (columnIndex) {
             case 0:
                 return file.getIcon();
@@ -61,7 +63,7 @@ public class RemoteTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        FTPFile file = files[rowIndex];
+        FTPFile file = files.get(rowIndex);
         if (columnIndex == 1) {
             String newName = (String) aValue;
             if (newName.equals("")) {
@@ -95,27 +97,26 @@ public class RemoteTableModel extends AbstractTableModel {
         return columns[column];
     }
 
-    void setFiles(FTPFile[] files) {
+    void setFiles(List<FTPFile> files) {
         this.files = files;
         OrderByName();
         fireTableDataChanged();
     }
 
     FTPFile getFile(int rowIndex) {
-        return files[rowIndex];
+        return files.get(rowIndex);
     }
 
     private void OrderByName() {
-        FTPFile[] sortFiles = new FTPFile[files.length];
-        int i = 0, j = files.length - 1;
+        List<FTPFile> sortFiles = new ArrayList<>();
         for (FTPFile file : files) {
             if (file.isDirectory())
-                sortFiles[i++] = file;
-            else
-                sortFiles[j--] = file;
+                sortFiles.add(file);
         }
-        j = files.length - 1;
-        Utils.getInstance().reverse(sortFiles, i, j);
+        for (FTPFile file : files) {
+            if (!file.isDirectory())
+                sortFiles.add(file);
+        }
         files = sortFiles;
     }
 
@@ -125,28 +126,21 @@ public class RemoteTableModel extends AbstractTableModel {
     }
 
     public void addRow(FTPFile file) {
-        FTPFile[] newFiles = Arrays.copyOf(files, files.length + 1);
-        newFiles[files.length] = file;
-        this.files = newFiles;
-        file.getParent().setChildren(files);
-        fireTableRowsInserted(files.length - 1, files.length - 1);
+        int length = files.size();
+        this.files.add(file);
+        fireTableRowsInserted(length, length);
     }
 
     void removeRows(int[] rows) {
         if (rows.length == 0)
             return;
         Arrays.sort(rows);
-        FTPFile[] newFiles = new FTPFile[files.length - rows.length];
-        int j = 0, k = 0;
-        for (int i = 0; i < files.length; i++) {
-            if (j >= rows.length || i != rows[j]) {
-                newFiles[k++] = files[i];
-            } else {
-                j++;
-            }
-        }
-        files = newFiles;
-        categoryPane.getCurrentFile().setChildren(files);
+        for (int row : rows)
+            files.remove(row);
         fireTableRowsDeleted(rows[0], rows[rows.length - 1]);
+    }
+
+    void clearFiles(){
+        files.clear();
     }
 }
