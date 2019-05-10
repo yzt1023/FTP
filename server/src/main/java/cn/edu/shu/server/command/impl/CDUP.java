@@ -18,6 +18,7 @@ public class CDUP implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         if (request.hasArgument()) {
             session.println(FTPReplyCode.INVALID_PARAMETER.getReply());
             return;

@@ -6,6 +6,7 @@
 package cn.edu.shu.client.ui.category;
 
 import cn.edu.shu.common.util.Utils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,12 +26,16 @@ public abstract class CategoryPane extends JPanel {
     JPopupMenu tableMenu;
     ActionListener menuListener;
     Utils utils = Utils.getInstance();
+    Logger logger = Logger.getLogger(getClass());
     private JButton imgUp;
     private JScrollPane scrollTable;
     private JScrollPane scrollTree;
-    private JMenuItem openItem;
-    private JMenuItem deleteItem;
-    private JMenuItem renameItem;
+    JMenuItem openItem;
+    JMenuItem deleteItem;
+    JMenuItem renameItem;
+    JMenuItem newItem;
+    JMenuItem refreshItem;
+    boolean showItems;
     private JPopupMenu treeMenu;
 
     CategoryPane() {
@@ -97,10 +102,10 @@ public abstract class CategoryPane extends JPanel {
      */
     void initPopupMenu() {
         openItem = new JMenuItem("Open", new ImageIcon(utils.getResourcePath(getClass(), "folder_open.png")));
-        JMenuItem newItem = new JMenuItem("New folder", new ImageIcon(utils.getResourcePath(getClass(), "create_folder.png")));
+        newItem = new JMenuItem("New folder", new ImageIcon(utils.getResourcePath(getClass(), "create_folder.png")));
         deleteItem = new JMenuItem("Delete", new ImageIcon(utils.getResourcePath(getClass(), "delete_folder.png")));
         renameItem = new JMenuItem("Rename", new ImageIcon(utils.getResourcePath(getClass(), "rename.png")));
-        JMenuItem refreshItem = new JMenuItem("Refresh", new ImageIcon(utils.getResourcePath(getClass(), "refresh.png")));
+        refreshItem = new JMenuItem("Refresh", new ImageIcon(utils.getResourcePath(getClass(), "refresh.png")));
 
         tableMenu.add(openItem);
         tableMenu.add(newItem);
@@ -139,7 +144,7 @@ public abstract class CategoryPane extends JPanel {
             // windows
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
+                if (e.isPopupTrigger() && showItems) {
                     showMenuItems(false);
                     tableMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
@@ -157,15 +162,10 @@ public abstract class CategoryPane extends JPanel {
                 }
             }
 
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                super.mouseDragged(e);
-            }
-
             // windows
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
+                if (e.isPopupTrigger() && showItems) {
                     showMenuItems(true);
                     tableMenu.show(e.getComponent(), e.getX(), e.getY());
                     int row = ctgTable.rowAtPoint(e.getPoint());
@@ -394,6 +394,7 @@ public abstract class CategoryPane extends JPanel {
 
     @Override
     public void setEnabled(boolean enabled) {
+        showItems = enabled;
         lblCategory.setEnabled(enabled);
         txtCategory.setEnabled(enabled);
         imgUp.setEnabled(enabled);

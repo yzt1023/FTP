@@ -5,10 +5,14 @@
 
 package cn.edu.shu.client.ui.category;
 
+import cn.edu.shu.client.exception.ConnectionException;
+import cn.edu.shu.client.exception.FTPException;
+import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.util.TreeUtils;
+import cn.edu.shu.common.bean.User;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 
@@ -16,6 +20,8 @@ import javax.swing.*;
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -28,12 +34,14 @@ public class RemoteCategoryPane extends CategoryPane {
     private RemoteTableModel tableModel;
     private TransferListener listener;
     private FTPFile home;
+    private User user;
 
     public RemoteCategoryPane(FTPClient client, TransferListener listener) {
         super();
         this.ftpClient = client;
         this.listener = listener;
         lblCategory.setText("Remote Category: ");
+        showItems = false;
     }
 
     @Override
@@ -51,6 +59,7 @@ public class RemoteCategoryPane extends CategoryPane {
         downloadItem = new JMenuItem("Download", new ImageIcon(utils.getResourcePath(getClass(), "download.png")));
         tableMenu.add(downloadItem);
         tableMenu.addSeparator();
+
         downloadItem.addActionListener(menuListener);
         super.initPopupMenu();
     }
@@ -68,7 +77,7 @@ public class RemoteCategoryPane extends CategoryPane {
     void reloadChildrenNode(FileTreeNode node) {
         node.removeAllChildren();
         FTPFile file = (FTPFile) node.getUserObject();
-        List<FTPFile> subFiles = ftpClient.getFiles(file);
+        List<FTPFile> subFiles = refreshChildren(file);
         for (FTPFile subFile : subFiles)
             if (subFile.isDirectory())
                 node.add(new FileTreeNode(subFile));
@@ -76,8 +85,26 @@ public class RemoteCategoryPane extends CategoryPane {
 
     @Override
     void showMenuItems(boolean rowSelected) {
-        downloadItem.setEnabled(rowSelected);
-        super.showMenuItems(rowSelected);
+        if (!user.isReadable()) {
+            downloadItem.setEnabled(false);
+            openItem.setEnabled(false);
+            refreshItem.setEnabled(false);
+        }else{
+            downloadItem.setEnabled(rowSelected);
+            openItem.setEnabled(rowSelected);
+            refreshItem.setEnabled(true);
+        }
+        if (!user.isWritable()) {
+            renameItem.setEnabled(false);
+            newItem.setEnabled(false);
+        }else {
+            renameItem.setEnabled(rowSelected);
+            newItem.setEnabled(true);
+        }
+        if (!user.canDeleted()) {
+            deleteItem.setEnabled(false);
+        }else
+            deleteItem.setEnabled(rowSelected);
     }
 
     @Override
@@ -96,26 +123,30 @@ public class RemoteCategoryPane extends CategoryPane {
             txtCategory.setText(path);
             return;
         }
-        if (ftpClient.changeDirectory(path)) {
-            txtCategory.setText(ftpClient.printWorkingDir());
-            // find the file with the specified filename
-            String[] names = ftpClient.getCurrentPath().split(Constants.SEPARATOR);
-            FTPFile file = home;
-            if (names.length > 1) {
-                for (int i = 1; i < names.length; i++) {
-                    getFileChildren(file);
-                    file = file.getChild(names[i]);
+        try {
+            if (ftpClient.changeDirectory(path)) {
+                txtCategory.setText(ftpClient.printWorkingDir());
+                // find the file with the specified filename
+                String[] names = ftpClient.getCurrentPath().split(Constants.SEPARATOR);
+                FTPFile file = home;
+                if (names.length > 1) {
+                    for (int i = 1; i < names.length; i++) {
+                        getFileChildren(file);
+                        file = file.getChild(names[i]);
+                    }
                 }
+                currentFile = file;
+                // load the table data and select corresponding row of tree
+                loadTableData();
+                int row = TreeUtils.getLastMatchedRow(ctgTree, currentFile.getPath());
+                ctgTree.setSelectionRow(row);
+            } else {
+                // remote change directory failed
+                MessageUtils.showInfoMessage(Constants.PATH_NOT_EXISTS);
+                txtCategory.setText(currentFile.getPath());
             }
-            currentFile = file;
-            // load the table data and select corresponding row of tree
-            loadTableData();
-            int row = TreeUtils.getLastMatchedRow(ctgTree, currentFile.getPath());
-            ctgTree.setSelectionRow(row);
-        } else {
-            // remote change directory failed
-            MessageUtils.showInfoMessage(Constants.PATH_NOT_EXISTS);
-            txtCategory.setText(currentFile.getPath());
+        } catch (ConnectionException e) {
+            connectionExceptionHandle(e);
         }
     }
 
@@ -144,7 +175,7 @@ public class RemoteCategoryPane extends CategoryPane {
         int[] rows = ctgTable.getSelectedRows();
         for (int row : rows) {
             FTPFile file = tableModel.getFile(row);
-            listener.fireDownload(file, false);
+            listener.startDownload(file, false);
         }
     }
 
@@ -169,7 +200,7 @@ public class RemoteCategoryPane extends CategoryPane {
         if (file.isDirectory())
             enterFolder(file);
         else {
-            listener.fireDownload(file, true);
+            listener.startDownload(file, true);
         }
     }
 
@@ -183,13 +214,22 @@ public class RemoteCategoryPane extends CategoryPane {
     }
 
     boolean renameFile(String src, String des) {
-        return ftpClient.rename(src, des);
+        try {
+            ftpClient.rename(src, des);
+        } catch (ConnectionException e) {
+            connectionExceptionHandle(e);
+            return false;
+        } catch (NoPermissionException e) {
+            noPermissionExceptionHandle(e);
+            return false;
+        }
+        return true;
     }
 
     @Override
     void refreshTable() {
         txtCategory.setText(currentFile.getPath());
-        tableModel.setFiles(ftpClient.getFiles(currentFile));
+        tableModel.setFiles(refreshChildren(currentFile));
     }
 
     @Override
@@ -202,20 +242,26 @@ public class RemoteCategoryPane extends CategoryPane {
             int j = 0;
             for (; j < rows.length; j++) {
                 FTPFile file = tableModel.getFile(rows[j]);
-                if (!deleteFolder(file)) {
-                    MessageUtils.showErrorMessage(Constants.FILE_DELETE_FAILED, Constants.DELETE_FILE_TITLE);
-                    break;
-                } else {
-                    currentFile.removeChild(file);
+                try {
+                    if (!deleteFolder(file)) {
+                        MessageUtils.showErrorMessage(Constants.FILE_DELETE_FAILED, Constants.DELETE_FILE_TITLE);
+                        break;
+                    } else {
+                        currentFile.removeChild(file);
+                    }
+                } catch (ConnectionException e) {
+                    connectionExceptionHandle(e);
+                } catch (NoPermissionException e) {
+                    noPermissionExceptionHandle(e);
                 }
             }
             tableModel.removeRows(Arrays.copyOfRange(rows, 0, j));
         }
     }
 
-    private boolean deleteFolder(FTPFile dir) {
+    private boolean deleteFolder(FTPFile dir) throws ConnectionException, NoPermissionException {
         if (dir.isDirectory()) {
-            List<FTPFile> files = ftpClient.getFiles(dir);
+            List<FTPFile> files = refreshChildren(dir);
             for (FTPFile file : files) {
                 boolean success = deleteFolder(file);
                 if (!success)
@@ -230,19 +276,26 @@ public class RemoteCategoryPane extends CategoryPane {
     void newFolder() {
         String newName = Constants.INIT_NAME + utils.formatDate(new Date());
         String path = utils.getPath(currentFile.getPath(), newName);
-        if (ftpClient.makeDirectory(path)) {
-            FTPFile file = new FTPFile(currentFile, newName);
-            file.setPath(path);
-            file.setType(Constants.FILE_FOLDER);
-            file.setLastChanged(new Date());
-            tableModel.addRow(file);
-            currentFile.addChild(file);
-            int row = tableModel.getRowCount() - 1;
-            ctgTable.setRowSelectionInterval(row, row);
-            ctgTable.editCellAt(row, 1);
-        } else {
-            MessageUtils.showErrorMessage(Constants.FOLDER_CREATE_FAILED, Constants.NEW_FOLDER_TITLE);
+
+        try {
+            ftpClient.makeDirectory(path);
+        } catch (NoPermissionException e) {
+            MessageUtils.showErrorMessage(e.getMessage(), Constants.NEW_FOLDER_TITLE);
+            return;
+        } catch (ConnectionException e) {
+            connectionExceptionHandle(e);
+            return;
         }
+
+        FTPFile file = new FTPFile(currentFile, newName);
+        file.setPath(path);
+        file.setType(Constants.FILE_FOLDER);
+        file.setLastChanged(new Date());
+        tableModel.addRow(file);
+        currentFile.addChild(file);
+        int row = tableModel.getRowCount() - 1;
+        ctgTable.setRowSelectionInterval(row, row);
+        ctgTable.editCellAt(row, 1);
     }
 
     @Override
@@ -263,7 +316,17 @@ public class RemoteCategoryPane extends CategoryPane {
     public void afterConnect() {
         setEnabled(true);
         // get remote home dir
-        home = new FTPFile(ftpClient.printWorkingDir());
+        user = ftpClient.getUser();
+        if (!user.isReadable())
+            return;
+
+        try {
+            home = new FTPFile(ftpClient.printWorkingDir());
+        } catch (ConnectionException e) {
+            connectionExceptionHandle(e);
+            return;
+        }
+
         home.setName(home.getPath());
         home.setType(Constants.FILE_FOLDER);
         home.setParent(null);
@@ -275,6 +338,7 @@ public class RemoteCategoryPane extends CategoryPane {
 
     public void afterDisconnect() {
         clearData();
+        showItems = false;
         setEnabled(false);
     }
 
@@ -290,10 +354,41 @@ public class RemoteCategoryPane extends CategoryPane {
     }
 
     private List<FTPFile> getFileChildren(FTPFile file) {
-        if (file.getChildren() == null)
-            return ftpClient.getFiles(file);
-        else
+        if (file.getChildren() == null) {
+            return refreshChildren(file);
+        } else
             return file.getChildren();
+    }
+
+    private void connectionExceptionHandle(ConnectionException e) {
+        logger.error(e.getMessage(), e);
+        try {
+            ftpClient.reconnect();
+        } catch (Exception ex) {
+            logger.error(e.getMessage(), e);
+            MessageUtils.showInfoMessage(e.getMessage());
+//            afterDisconnect();
+            return;
+        }
+        MessageUtils.showInfoMessage(Constants.RECONNECT_SUCCEED);
+    }
+
+    private void noPermissionExceptionHandle(NoPermissionException e) {
+        logger.error(e.getMessage(), e);
+        MessageUtils.showInfoMessage(Constants.OPERATION_FAILED + e.getMessage());
+    }
+
+    private List<FTPFile> refreshChildren(FTPFile ftpFile) {
+        try {
+            return ftpClient.getFiles(ftpFile);
+        } catch (ConnectionException e) {
+            connectionExceptionHandle(e);
+        } catch (IOException | FTPException e) {
+            logger.error(e.getMessage(), e);
+        } catch (NoPermissionException e) {
+            noPermissionExceptionHandle(e);
+        }
+        return new ArrayList<>();
     }
 
 }

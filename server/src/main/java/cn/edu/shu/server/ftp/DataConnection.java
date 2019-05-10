@@ -10,17 +10,24 @@ import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.Utils;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.KeyStore;
 
 public class DataConnection {
 
     private Socket dataSocket;
     private ServerSocket serverSocket;
     private boolean passiveMode;
+    private boolean secureMode;
+    private SSLContext sslContext;
     private InetSocketAddress socketAddress;
     private Logger logger = Logger.getLogger(getClass());
     private Utils utils = Utils.getInstance();
@@ -45,11 +52,27 @@ public class DataConnection {
         return socketAddress;
     }
 
-    public void openConnection() throws IOException {
+    public void openConnection() throws Exception {
         if (passiveMode) {
-            dataSocket = serverSocket.accept();
+            if (secureMode) {
+                Socket socket = serverSocket.accept();
+                SSLSocketFactory factory = sslContext.getSocketFactory();
+                SSLSocket sslSocket = (SSLSocket) factory.createSocket(socket, socket.getInetAddress().getHostName(), socket.getPort(), true);
+                sslSocket.setUseClientMode(false);
+                sslSocket.setNeedClientAuth(true);
+                dataSocket = sslSocket;
+            } else {
+                dataSocket = serverSocket.accept();
+            }
         } else {
-            dataSocket = new Socket();
+            if (secureMode) {
+                SSLSocketFactory socFactory = sslContext.getSocketFactory();
+                SSLSocket ssoc = (SSLSocket) socFactory.createSocket();
+                ssoc.setUseClientMode(false);
+                dataSocket = ssoc;
+            } else {
+                dataSocket = new Socket();
+            }
             dataSocket.connect(socketAddress);
         }
     }
@@ -111,8 +134,15 @@ public class DataConnection {
         bos.flush();
     }
 
-
     public InetSocketAddress getSocketAddress() {
         return socketAddress;
+    }
+
+    public void setSecureMode(boolean secureMode) {
+        this.secureMode = secureMode;
+    }
+
+    void setSslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
     }
 }

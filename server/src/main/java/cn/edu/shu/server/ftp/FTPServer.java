@@ -1,14 +1,22 @@
 package cn.edu.shu.server.ftp;
 
+import cn.edu.shu.common.ftp.SSLContextFactory;
 import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.Utils;
 import cn.edu.shu.server.util.ConfigUtils;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,6 +32,7 @@ public class FTPServer extends Thread {
     private List<FTPSession> sessions;
     private boolean suspend;
     private boolean stop;
+    private SSLContext sslContext;
 
     public FTPServer() {
         ConfigUtils.getInstance().initConfig();
@@ -32,8 +41,18 @@ public class FTPServer extends Thread {
         int corePoolSize = Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(corePoolSize, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         try {
-            serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
-        } catch (IOException e) {
+            sslContext = SSLContextFactory.createSSLContext(getClass());
+            assert sslContext != null;
+            SSLServerSocketFactory factory = sslContext.getServerSocketFactory();
+            SSLServerSocket server = (SSLServerSocket) factory.createServerSocket(Constants.DEFAULT_PORT);
+            //add anonymous cipher suites
+            String[] suites = server.getSupportedCipherSuites();
+            server.setEnabledCipherSuites(suites);
+            server.setUseClientMode(false);
+            server.setNeedClientAuth(true);
+            serverSocket = server;
+//            serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
         suspend = false;
@@ -62,6 +81,8 @@ public class FTPServer extends Thread {
                 socket.setTcpNoDelay(true);  // close the buffer of socket to ensure transfer speed
                 ControlConnection controlConnection = new ControlConnection(socket);
                 controlConnection.setListener(listener);
+                FTPSession session = controlConnection.getSession();
+                session.setSslContext(sslContext);
                 sessions.add(controlConnection.getSession());
                 executor.execute(controlConnection);
             }

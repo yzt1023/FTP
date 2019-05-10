@@ -67,7 +67,7 @@ public class FTPFile {
 
     public void setType(String type) {
         this.type = type;
-        isDirectory = type.equals(Constants.FILE_FOLDER) || type.equals(Constants.SYSTEM_FOLDER);
+        isDirectory = type.equals(Constants.FILE_FOLDER) || type.equals(Constants.SYSTEM_FOLDER) || type.contains(Constants.TYPE_DIR);
     }
 
     public Icon getIcon() {

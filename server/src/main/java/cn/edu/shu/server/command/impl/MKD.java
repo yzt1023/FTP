@@ -19,6 +19,7 @@ public class MKD implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         if (!session.getUser().isWritable()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Permission denied");
             return;

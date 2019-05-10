@@ -11,6 +11,7 @@ import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.db.UserDao;
 import cn.edu.shu.server.util.ConfigUtils;
 
+import javax.net.ssl.SSLContext;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.net.InetAddress;
@@ -124,5 +125,14 @@ public class FTPSession {
 
     public FileSystemView getFileSystemView() {
         return fileSystemView;
+    }
+
+    public void resetState() {
+        this.renamedFile = null;
+        this.offset = 0L;
+    }
+
+    void setSslContext(SSLContext sslContext) {
+        dataConnection.setSslContext(sslContext);
     }
 }

@@ -1,0 +1,13 @@
+<!--
+  ~ Written By : Skye You
+  ~ Copyright (c) 2018 - 2019. All Rights Reserved.
+-->
+
+<SSLConfig>
+    <protocol>TLSV1</protocol>
+    <certificate>server/src/main/resources/server.jks</certificate>
+    <certificatePwd>123123</certificatePwd>
+    <keyPwd>123123</keyPwd>
+    <trustCertificate>server/src/main/resources/serverTrust.jks</trustCertificate>
+    <trustCertificatePwd>123123</trustCertificatePwd>
+</SSLConfig>

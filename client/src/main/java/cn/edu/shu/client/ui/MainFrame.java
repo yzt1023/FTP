@@ -1,5 +1,8 @@
 package cn.edu.shu.client.ui;
 
+import cn.edu.shu.client.exception.ConnectionException;
+import cn.edu.shu.client.exception.FTPException;
+import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.ConnectListener;
@@ -15,11 +18,12 @@ import cn.edu.shu.common.log.MsgPane;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 import cn.edu.shu.common.util.Utils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.Date;
+import java.io.IOException;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -39,6 +43,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private Deque<Task> taskQueue;
     private Utils utils;
     private TransferUtils transferUtils;
+    private Logger logger = Logger.getLogger(getClass());
 
     public MainFrame() {
         super("FTPClient");
@@ -54,6 +59,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
         initComponents();
         setGroupLayout();
+        System.setProperty("javax.net.debug", "ssl,handshake");
     }
 
     private void initComponents() {
@@ -100,7 +106,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     }
 
     @Override
-    public void fireDownload(FTPFile ftpFile, boolean tempDir) {
+    public void startDownload(FTPFile ftpFile, boolean tempDir) {
         String localDir = localCategoryPane.getCurrentFile().getPath();
         if (tempDir)
             localDir = Constants.TEMP_DIR;
@@ -112,7 +118,13 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
         Task task = new Task(file, ftpFile, true);
         // scan file to obtain the file size
-        long size = transferUtils.getTotalSize(ftpFile, ftpClient);
+        long size;
+        try {
+            size = transferUtils.getTotalSize(ftpFile, ftpClient);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return;
+        }
         task.setMaxValue(size);
         task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
@@ -123,7 +135,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     }
 
     @Override
-    public void fireUpload(File file) {
+    public void startUpload(File file) {
         FTPFile parent = remoteCategoryPane.getCurrentFile();
         if (parent.getChild(file.getName()) != null) {
             MessageUtils.showInfoMessage(Constants.FILE_EXISTS);
@@ -168,29 +180,35 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         }
     }
 
-    boolean userRegister(String host, int port, String username, String password) {
-        ftpClient.connect(host, port);
-        return ftpClient.register(username, password);
+    @Override
+    public boolean startConnect(String host, int port) {
+        return startConnect(host, port, Constants.ANONYMOUS_USER, "");
     }
 
     @Override
-    public boolean fireConnect(String host, int port) {
-        return fireConnect(host, port, Constants.ANONYMOUS_USER, "");
+    public boolean startConnect(String host, int port, String username, String password) {
+        try{
+            ftpClient.connect(host, port);
+            ftpClient.login(username, password);
+        } catch (ConnectionException | FTPException e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public boolean fireConnect(String host, int port, String username, String password) {
-        ftpClient.connect(host, port);
-        return ftpClient.login(username, password);
+    public void startDisconnect() {
+        try {
+            ftpClient.disconnect();
+        } catch (ConnectionException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void fireDisconnect() {
-        ftpClient.disconnect();
-    }
-
-    @Override
-    public void afterConnect() {
+    public void connectCompleted() {
+        localCategoryPane.afterConnect(ftpClient.getUser().isReadable());
         remoteCategoryPane.afterConnect();
         menuBar.afterConnect();
         TransferThread downloadThread = new TransferThread(taskQueue, ftpClient, this);
@@ -198,7 +216,8 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     }
 
     @Override
-    public void afterDisconnect() {
+    public void disconnectCompleted() {
+        localCategoryPane.afterDisconnect();
         remoteCategoryPane.afterDisconnect();
         menuBar.afterDisconnect();
     }
@@ -214,6 +233,11 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     @Override
     public void println(String message) {
         msgPane.println(message);
+        logger.info(message);
+    }
+
+    FTPClient getFtpClient() {
+        return ftpClient;
     }
 }
 // TODO: 3/2/2019 change layout by mouse drag

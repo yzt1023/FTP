@@ -35,7 +35,6 @@ public class ControlConnection implements Runnable, MsgListener {
         this.controlSocket = controlSocket;
         logger = Logger.getLogger(getClass());
         encoding = "UTF-8";
-//        encoding = "GB2312";
         session = new FTPSession(this);
         closed = false;
     }
@@ -51,7 +50,10 @@ public class ControlConnection implements Runnable, MsgListener {
             while (!closed && readRequest() != null) {
                 FTPRequest ftpRequest = new FTPRequest(request);
                 Command command = CommandFactory.getCommand(ftpRequest.getCommand());
-                command.execute(session, ftpRequest);
+                if(command != null)
+                    command.execute(session, ftpRequest);
+                else
+                    println(FTPReplyCode.NOT_IMPLEMENTED.getReply());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -77,8 +79,10 @@ public class ControlConnection implements Runnable, MsgListener {
         if (request != null){
             if(request.startsWith(FTPCommand.PASS)){
                 listener.println(FTPCommand.PASS + " ******");
+                logger.info(FTPCommand.PASS + " ******");
             }else {
                 listener.println(request);
+                logger.info(request);
             }
         }
         return request;
@@ -103,12 +107,12 @@ public class ControlConnection implements Runnable, MsgListener {
     }
 
     void shutdown() {
-        try {
-            controlSocket.shutdownInput();
-            controlSocket.shutdownOutput();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+//        try {
+//            controlSocket.shutdownInput();
+//            controlSocket.shutdownOutput();
+//        } catch (IOException e) {
+//            logger.error(e.getMessage(), e);
+//        }
     }
 
     InetAddress getAddress() {

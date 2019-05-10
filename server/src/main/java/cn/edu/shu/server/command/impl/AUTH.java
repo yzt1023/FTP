@@ -10,17 +10,19 @@ import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.FTPRequest;
 import cn.edu.shu.server.ftp.FTPSession;
 
-public class NOOP implements Command {
+public class AUTH implements Command {
 
-    public NOOP() {
+    public AUTH() {
     }
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
         session.resetState();
-        if(request.hasArgument())
+        if(!request.hasArgument()){
             session.println(FTPReplyCode.INVALID_PARAMETER.getReply());
-        else
-            session.println(FTPReplyCode.COMMAND_OK.getReply());
+            return;
+        }
+
+
     }
 }

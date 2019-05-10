@@ -5,11 +5,15 @@
 
 package cn.edu.shu.client.util;
 
+import cn.edu.shu.client.exception.ConnectionException;
+import cn.edu.shu.client.exception.FTPException;
+import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 
 public class TransferUtils {
@@ -21,7 +25,7 @@ public class TransferUtils {
         return instance;
     }
 
-    public long getTotalSize(FTPFile ftpFile, FTPClient ftpClient){
+    public long getTotalSize(FTPFile ftpFile, FTPClient ftpClient) throws ConnectionException, FTPException, NoPermissionException, IOException {
         if(!ftpFile.isDirectory())
             return ftpFile.getSize();
         int size = 0;

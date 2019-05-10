@@ -19,12 +19,18 @@ public class PASS implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         User user = session.getUser();
         if (user == null)
             session.println(FTPReplyCode.BAD_SEQUENCE + " Login with USER first");
         else if (!Constants.ANONYMOUS_USER.equals(user.getUsername()) && !user.getPassword().equals(request.getArgument()))
             session.println(FTPReplyCode.NOT_LOGGED_IN + " Authentication failed");
-        else
-            session.println(FTPReplyCode.LOGGED_IN.getReply());
+        else{
+            String permission = "(";
+            permission += user.isReadable() ? "1" : "0";
+            permission += user.isWritable() ? "1" : "0";
+            permission += user.canDeleted() ? "1)" : "0)";
+            session.println(FTPReplyCode.LOGGED_IN.getReply() + ", and permission is" + permission);
+        }
     }
 }

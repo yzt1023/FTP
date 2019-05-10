@@ -27,11 +27,14 @@ public class LocalCategoryPane extends CategoryPane {
     private LocalTableModel tableModel;
     private JMenuItem uploadItem;
     private TransferListener listener;
+    private boolean canUpload;
 
     public LocalCategoryPane(TransferListener listener) {
         super();
         this.listener = listener;
+        canUpload = false;
         lblCategory.setText("Local Category: ");
+        showItems = true;
     }
 
     @Override
@@ -56,6 +59,7 @@ public class LocalCategoryPane extends CategoryPane {
         tableMenu.add(uploadItem);
         tableMenu.addSeparator();
         uploadItem.addActionListener(menuListener);
+        uploadItem.setEnabled(false);
         super.initPopupMenu();
     }
 
@@ -76,7 +80,10 @@ public class LocalCategoryPane extends CategoryPane {
 
     @Override
     void showMenuItems(boolean rowSelected) {
-        uploadItem.setEnabled(rowSelected);
+        if(!canUpload)
+            uploadItem.setEnabled(false);
+        else
+            uploadItem.setEnabled(rowSelected);
         super.showMenuItems(rowSelected);
     }
 
@@ -133,7 +140,7 @@ public class LocalCategoryPane extends CategoryPane {
         int[] rows = ctgTable.getSelectedRows();
         for (int row : rows) {
             File file = tableModel.getFile(row);
-            listener.fireUpload(file);
+            listener.startUpload(file);
         }
     }
 
@@ -247,5 +254,14 @@ public class LocalCategoryPane extends CategoryPane {
 
     public File getCurrentFile() {
         return currentFile;
+    }
+
+    public void afterConnect(boolean isWritable){
+        if(isWritable)
+            canUpload = true;
+    }
+
+    public void afterDisconnect(){
+        canUpload = false;
     }
 }

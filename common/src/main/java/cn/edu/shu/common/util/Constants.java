@@ -36,7 +36,7 @@ public interface Constants {
     String FOLDER_CREATE_FAILED = "New folder failed!";
     String INIT_NAME = "New Folder";
     String EMPTY_FILENAME = "You must type a file name!";
-    String ABSOLUTE_PATH_REQUIRED = "Please enter an absolute path!";
+    String OPERATION_FAILED = "File operation failed!";
     // operation title
     String NEW_FOLDER_TITLE = "New Folder";
     String OPEN_FILE_TITLE = "Open File";
@@ -49,12 +49,18 @@ public interface Constants {
     String EMPTY_USER = "Username cannot be empty!";
     String INVALID_PORT = "Invalid port number!";
     String CONNECT_FAILED = "Unable to connect to the specified server!";
+    String CONNECT_FIRST = "Please connect first!";
+    String REGISTER_SUCCEED = "Register successfully!";
+    String RECONNECT_SUCCEED = "Reconnect succeed!";
+
+
+    String SEND_COMMAND_ERROR = "Send command error!";
     String RESPONSE_ERROR = "Read response failed!";
-    String RECONNECT_FAILED = "Reconnect failed!";
     // user
     String EMPTY_PASSWORD = "Password cannot be empty!";
     String USER_EXISTS = "Username has been registered! Please use another username!";
-    String PASSWORD_DIFFERENT = "The two passwords entered are different";
+    String PASSWORD_DIFFERENT = "The two passwords entered are different!";
+    String PERMISSION_DENIED = "Permission denied!";
     // transfer task state
     String STATE_WAITING = "WAITING";
     String STATE_PROCESSING = "PROCESSING";

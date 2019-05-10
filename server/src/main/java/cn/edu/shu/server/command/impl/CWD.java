@@ -19,6 +19,7 @@ public class CWD implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         String path = session.getAbsolutePath(request.getArgument());
         String current = session.getCurrentPath(path);
         File file = new File(path);

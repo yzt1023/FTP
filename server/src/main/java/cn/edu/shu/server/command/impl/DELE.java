@@ -19,6 +19,7 @@ public class DELE implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         if (!session.getUser().canDeleted()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Permission denied");
             return;

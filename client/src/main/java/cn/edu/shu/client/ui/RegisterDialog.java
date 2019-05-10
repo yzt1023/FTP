@@ -5,8 +5,12 @@
 
 package cn.edu.shu.client.ui;
 
+import cn.edu.shu.client.exception.ConnectionException;
+import cn.edu.shu.client.exception.FTPException;
+import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +36,7 @@ class RegisterDialog extends JDialog {
     private JButton btnReset;
     private JButton btnCancel;
     private MainFrame frame;
+    private Logger logger = Logger.getLogger(getClass());
 
     RegisterDialog(JFrame frame) {
         super(frame, ModalityType.APPLICATION_MODAL);
@@ -113,18 +118,30 @@ class RegisterDialog extends JDialog {
                 }
             }
 
-            if (!frame.userRegister(host, portNum, user, new String(pwd)))
-                MessageUtils.showInfoMessage(Constants.USER_EXISTS);
-            else {
-                MessageUtils.showInfoMessage("Register successfully!");
-                clearAll();
-            }
+            userRegister(host, portNum, user, new String(pwd));
         });
 
         btnReset.addActionListener(e -> clearAll());
 
-
         btnCancel.addActionListener(e -> dispose());
+    }
+
+    private void userRegister(String host, int port, String username, String password) {
+        FTPClient ftpClient = frame.getFtpClient();
+        try {
+            ftpClient.connect(host, port);
+            ftpClient.register(username, password);
+        } catch (ConnectionException e) {
+            logger.error(e.getMessage(), e);
+            MessageUtils.showInfoMessage(Constants.CONNECT_FAILED);
+            return;
+        } catch (FTPException e) {
+            logger.error(e.getMessage(), e);
+            MessageUtils.showInfoMessage(Constants.USER_EXISTS);
+            return;
+        }
+        MessageUtils.showInfoMessage(Constants.REGISTER_SUCCEED);
+        clearAll();
     }
 
     private void clearAll() {

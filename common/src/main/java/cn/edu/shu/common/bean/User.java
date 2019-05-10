@@ -14,6 +14,9 @@ public class User {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.readable = true;
+        this.writable = true;
+        this.deleted = true;
     }
 
     public User(String username, String password, boolean valid, boolean readable, boolean writable, boolean deleted) {

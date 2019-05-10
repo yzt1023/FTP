@@ -38,15 +38,14 @@ public class CommandFactory {
         commandMap.put("MODE", new MODE());
         commandMap.put("NLST", new NLST());
         commandMap.put("OPTS", new OPTS());
-        commandMap.put("PBSZ", new PBSZ());
-        commandMap.put("PROT", new PROT());
         commandMap.put("REIN", new REIN());
         commandMap.put("SITE", new SITE());
         commandMap.put("STAT", new STAT());
         commandMap.put("STOU", new STOU());
         commandMap.put("STRU", new STRU());
         commandMap.put("SYST", new SYST());*/
-        commandMap.put("APPE", new APPE());
+        commandMap.put(FTPCommand.APPE, new APPE());
+        commandMap.put(FTPCommand.AUTH, new AUTH());
         commandMap.put(FTPCommand.CDUP, new CDUP());
         commandMap.put(FTPCommand.CWD, new CWD());
         commandMap.put(FTPCommand.DELE, new DELE());
@@ -55,7 +54,9 @@ public class CommandFactory {
         commandMap.put(FTPCommand.NOOP, new NOOP());
         commandMap.put(FTPCommand.PASS, new PASS());
         commandMap.put(FTPCommand.PASV, new PASV());
+        commandMap.put(FTPCommand.PBSZ, new PBSZ());
         commandMap.put(FTPCommand.PORT, new PORT());
+        commandMap.put(FTPCommand.PROT, new PROT());
         commandMap.put(FTPCommand.PWD, new PWD());
         commandMap.put(FTPCommand.QUIT, new QUIT());
         commandMap.put(FTPCommand.RETR, new RETR());

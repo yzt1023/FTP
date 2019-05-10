@@ -29,6 +29,7 @@ public class MLSD implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         if (!session.getUser().isReadable()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Permission denied");
             return;
@@ -61,7 +62,7 @@ public class MLSD implements Command {
 
         try {
             dataConnection.openConnection();
-        }catch (IOException e){
+        }catch (Exception e){
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
             return;

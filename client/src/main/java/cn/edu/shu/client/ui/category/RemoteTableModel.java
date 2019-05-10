@@ -76,8 +76,6 @@ public class RemoteTableModel extends AbstractTableModel {
                     file.setPath(newPath);
                     file.getParent().setChildren(files);
                     fireTableCellUpdated(rowIndex, columnIndex);
-                } else {
-                    MessageUtils.showErrorMessage(Constants.FILE_RENAME_FAILED, Constants.RENAME_FILE_TITLE);
                 }
             }
         }

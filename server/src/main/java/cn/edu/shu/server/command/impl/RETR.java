@@ -74,7 +74,7 @@ public class RETR implements Command {
 
             try {
                 dataConnection.openConnection();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
                 return;

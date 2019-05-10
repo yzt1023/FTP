@@ -50,6 +50,7 @@ public class MenuBar extends JMenuBar {
         menuMode.add(passiveModeItem);
 
         secureModeItem = new JCheckBoxMenuItem("Secure Mode");
+        secureModeItem.setSelected(true);
         secureModeItem.setMnemonic('s');
         menuMode.add(secureModeItem);
         this.add(menuMode);
@@ -67,7 +68,9 @@ public class MenuBar extends JMenuBar {
         this.add(menuHelp);
 
         // action
-        passiveModeItem.addActionListener(e -> frame.firePasvModeChanged(passiveModeItem.isSelected()));
+        passiveModeItem.addChangeListener(e -> frame.firePasvModeChanged(passiveModeItem.isSelected()));
+
+        secureModeItem.addChangeListener(e -> frame.fireSecureModeChanged(secureModeItem.isSelected()));
 
         exitItem.addActionListener(e -> {
             int i = MessageUtils.showConfirmMessage(Constants.CONFIRM_TO_EXIT,
@@ -100,9 +103,11 @@ public class MenuBar extends JMenuBar {
 
     void afterConnect() {
         registerItem.setEnabled(false);
+        secureModeItem.setEnabled(false);
     }
 
     void afterDisconnect(){
         registerItem.setEnabled(true);
+        secureModeItem.setEnabled(true);
     }
 }

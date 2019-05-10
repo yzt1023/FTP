@@ -6,9 +6,9 @@
 package cn.edu.shu.client.listener;
 
 public interface ConnectListener {
-    boolean fireConnect(String host, int port);
-    boolean fireConnect(String host, int port, String username, String password);
-    void fireDisconnect();
-    void afterConnect();
-    void afterDisconnect();
+    boolean startConnect(String host, int port);
+    boolean startConnect(String host, int port, String username, String password);
+    void startDisconnect();
+    void connectCompleted();
+    void disconnectCompleted();
 }

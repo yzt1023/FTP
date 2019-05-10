@@ -22,7 +22,7 @@ public enum FTPReplyCode {
     DATA_CONNECTION_OPEN(225, "Data connection open; no transfer in progress"),
     CLOSING_DATA_CONNECTION(226, "Successfully transferred \"?\""),
     ENTERING_PASSIVE_MODE(227, "Entering Passive Mode "),
-    LOGGED_IN(230, "User logged in, proceed"),
+    LOGGED_IN(230, "User logged in"),
     FILE_ACTION_OK(250, "Requested file action okay, completed"),
     PATHNAME_CREATED(257, "\"?\" is current directory"),
     NEED_PASSWORD(331, "User name okay, need password"),

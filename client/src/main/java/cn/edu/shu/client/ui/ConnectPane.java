@@ -69,10 +69,8 @@ class ConnectPane extends JPanel {
             if ("connect".equals(btnConnect.getText()))
                 connect();
             else {
-                listener.fireDisconnect();
-                setInputEnabled(true);
-                btnConnect.setText(CONNECT);
-                listener.afterDisconnect();
+                listener.startDisconnect();
+                afterDisconnect();
             }
         });
 
@@ -97,7 +95,7 @@ class ConnectPane extends JPanel {
                 return;
             }
         }
-        if (anonymous && listener.fireConnect(host, portNum)) {
+        if (anonymous && listener.startConnect(host, portNum)) {
             afterConnect();
             return;
         }
@@ -110,7 +108,7 @@ class ConnectPane extends JPanel {
                 MessageUtils.showInfoMessage(Constants.EMPTY_PASSWORD);
                 return;
             }
-            if (listener.fireConnect(host, portNum, username, new String(password))) {
+            if (listener.startConnect(host, portNum, username, new String(password))) {
                 afterConnect();
                 return;
             }
@@ -121,7 +119,13 @@ class ConnectPane extends JPanel {
     private void afterConnect() {
         btnConnect.setText(DISCONNECT);
         setInputEnabled(false);
-        listener.afterConnect();
+        listener.connectCompleted();
+    }
+
+    private void afterDisconnect() {
+        setInputEnabled(true);
+        btnConnect.setText(CONNECT);
+        listener.disconnectCompleted();
     }
 
     private void setGroupLayout() {

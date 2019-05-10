@@ -26,6 +26,7 @@ public class APPE implements Command {
 
     @Override
     public void execute(FTPSession session, FTPRequest request) {
+        session.resetState();
         if (!session.getUser().isWritable()) {
             session.println(FTPReplyCode.FILE_UNAVAILABLE + " Permission denied");
             return;
@@ -63,7 +64,7 @@ public class APPE implements Command {
 
             try {
                 dataConnection.openConnection();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
                 return;

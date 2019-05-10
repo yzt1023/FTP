@@ -5,6 +5,9 @@
 
 package cn.edu.shu.client.thread;
 
+import cn.edu.shu.client.exception.ConnectionException;
+import cn.edu.shu.client.exception.FTPException;
+import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
@@ -70,7 +73,7 @@ public class TransferThread extends Thread {
         }
     }
 
-    private boolean download(File file, FTPFile ftpFile) throws IOException{
+    private boolean download(File file, FTPFile ftpFile) throws IOException, ConnectionException, FTPException, NoPermissionException {
         if (!ftpFile.isDirectory()) {
             if(file.exists() && file.length() == ftpFile.getSize())
                 return true;
@@ -119,7 +122,7 @@ public class TransferThread extends Thread {
         }
     }
 
-    private boolean upload(File file, FTPFile ftpFile) throws IOException{
+    private boolean upload(File file, FTPFile ftpFile) throws IOException, ConnectionException, FTPException, NoPermissionException {
         //set ftp info
         ftpFile.setLastChanged(new Date());
         ftpFile.setType(fileSystemView.getSystemTypeDescription(file));

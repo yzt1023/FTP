@@ -5,13 +5,15 @@ public interface FTPCommand {
     String USER = "USER";   // username
     String PASS = "PASS";   // password
     String REG = "REG";     // register
-    String ACCT = "ACCT";
     String QUIT = "QUIT";   // disconnect
+
+    String AUTH = "AUTH";
+    String PBSZ = "PBSZ";
+    String PROT = "PROT";
 
     String TYPE = "TYPE";
     String PASV = "PASV";   // enter passive mode
     String PORT = "PORT";   // open a data port
-    String STRU = "STRU";
     String MODE = "MODE";
 
     String PWD = "PWD";     // println working directory
