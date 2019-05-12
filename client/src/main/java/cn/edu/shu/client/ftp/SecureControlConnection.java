@@ -8,18 +8,19 @@ package cn.edu.shu.client.ftp;
 import cn.edu.shu.client.exception.ConnectionException;
 import cn.edu.shu.common.encryption.RSA;
 import cn.edu.shu.common.ftp.FTPCommand;
-import cn.edu.shu.common.util.AESUtils;
+import cn.edu.shu.common.util.SecurityUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
 
 public class SecureControlConnection extends PlainControlConnection {
 
-    private AESUtils aesUtils = AESUtils.getInstance();
+    private SecurityUtils securityUtils;
     private String clientKey, serverKey;
 
     SecureControlConnection(FTPClient client) {
         super(client);
+        securityUtils = client.getSecurityUtils();
     }
 
     @Override
@@ -46,7 +47,7 @@ public class SecureControlConnection extends PlainControlConnection {
             serverKey = rsa.decrypt(clientPrivateKey, clientN, key);
 
             // send aes key to server
-            clientKey = aesUtils.generateKey();
+            clientKey = securityUtils.generateKey();
             String sendKey = rsa.encrypt(serverPublicKey, serverN, clientKey);
             writer.println(sendKey);
 
@@ -59,7 +60,7 @@ public class SecureControlConnection extends PlainControlConnection {
     @Override
     public String decodeReply(String reply) {
         if(serverKey != null)
-            return aesUtils.decrypt(reply, serverKey);
+            return securityUtils.decrypt(reply, serverKey);
         else
             return reply;
     }
@@ -67,7 +68,7 @@ public class SecureControlConnection extends PlainControlConnection {
     @Override
     public String encodeCommand(String command) {
         if(clientKey != null)
-            return aesUtils.encrypt(command, clientKey);
+            return securityUtils.encrypt(command, clientKey);
         else
             return command;
     }

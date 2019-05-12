@@ -1,6 +1,6 @@
 package cn.edu.shu.server.db;
 
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
@@ -15,7 +15,7 @@ public class DBConfig {
     private DBConfig(){
         try {
             Properties properties = new Properties();
-            properties.load(Utils.getInstance().getResourceStream(DBConnPool.class, "db.properties"));
+            properties.load(CommonUtils.getInstance().getResourceStream(DBConnPool.class, "db.properties"));
             driver = properties.getProperty("driver");
             url = properties.getProperty("url");
             username = properties.getProperty("username");

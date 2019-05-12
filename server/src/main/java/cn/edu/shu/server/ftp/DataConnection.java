@@ -7,10 +7,9 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -19,7 +18,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyStore;
 
 public class DataConnection {
 
@@ -30,7 +28,7 @@ public class DataConnection {
     private SSLContext sslContext;
     private InetSocketAddress socketAddress;
     private Logger logger = Logger.getLogger(getClass());
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
 
     public void initActiveDataConnection(InetSocketAddress socketAddress) {
         closeConnection();

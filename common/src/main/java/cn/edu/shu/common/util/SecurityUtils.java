@@ -5,31 +5,31 @@
 
 package cn.edu.shu.common.util;
 
-import cn.edu.shu.common.EncryptionException;
+import cn.edu.shu.common.exception.EncryptionException;
 import cn.edu.shu.common.encryption.AES128;
 import cn.edu.shu.common.encryption.Base64;
 import cn.edu.shu.common.encryption.MD5;
 
 import java.util.Random;
 
-public class AESUtils {
+public class SecurityUtils {
 
-    private static AESUtils instance = new AESUtils();
+    private static SecurityUtils instance = new SecurityUtils();
     private AES128 aes128;
     private MD5 md5;
 
-    private AESUtils() {
+    private SecurityUtils() {
         aes128 = new AES128();
         md5 = new MD5();
     }
 
-    public static AESUtils getInstance() {
+    public static SecurityUtils getInstance() {
         return instance;
     }
 
     public byte[] encrypt(byte[] msg, byte[] key) {
         msg = fillText(msg);
-        key = md5.getMD5(key).getBytes();
+        key = md5.get16Md5(key).getBytes();
         try {
             msg = aes128.encrypt(msg, key);
         } catch (EncryptionException e) {
@@ -50,7 +50,7 @@ public class AESUtils {
 
     public byte[] decrypt(byte[] msg, byte[] key) {
         try {
-            key = md5.getMD5(key).getBytes();
+            key = md5.get16Md5(key).getBytes();
             aes128.decrypt(msg, key);
         } catch (EncryptionException e) {
             e.printStackTrace();
@@ -99,6 +99,10 @@ public class AESUtils {
             }
         }
         return key.toString();
+    }
+
+    public MD5 getMd5(){
+        return this.md5;
     }
 
 }

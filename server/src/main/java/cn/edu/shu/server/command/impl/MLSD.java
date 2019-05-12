@@ -7,7 +7,7 @@ package cn.edu.shu.server.command.impl;
 
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.DataConnection;
 import cn.edu.shu.server.ftp.FTPRequest;
@@ -86,7 +86,7 @@ public class MLSD implements Command {
         String type = fileSystemView.getSystemTypeDescription(f);
         line += Constants.KEY_TYPE + type;
         Date date = new Date(f.lastModified());
-        String modify = Utils.getInstance().formatDate(date);
+        String modify = CommonUtils.getInstance().formatDate(date);
         line += ";" + Constants.KEY_MODIFY + modify;
         if (!f.isDirectory())
             line += ";" + Constants.KEY_SIZE + f.length();

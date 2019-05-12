@@ -3,9 +3,9 @@
  * Copyright (c) 2018 - 2019. All Rights Reserved.
  */
 
-package cn.edu.shu.common;
+package cn.edu.shu.common.exception;
 
-public class EncryptionException extends Exception {
+public class EncryptionException extends Exception{
 
     public EncryptionException(String message) {
         super(message);

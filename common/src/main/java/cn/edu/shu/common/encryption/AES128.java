@@ -5,7 +5,7 @@
 
 package cn.edu.shu.common.encryption;
 
-import cn.edu.shu.common.EncryptionException;
+import cn.edu.shu.common.exception.EncryptionException;
 
 public class AES128 {
 

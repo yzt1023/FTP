@@ -1,12 +1,9 @@
 package cn.edu.shu.client.ftp;
 
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -72,7 +69,7 @@ public class FTPFile {
 
     public Icon getIcon() {
         if(icon == null) {
-            icon = Utils.getInstance().getIcon(name, isDirectory);
+            icon = CommonUtils.getInstance().getIcon(name, isDirectory);
         }
         return icon;
     }

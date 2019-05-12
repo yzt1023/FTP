@@ -149,6 +149,7 @@ class RegisterDialog extends JDialog {
         txtPort.setText("");
         txtUsername.setText("");
         txtPassword.setText("");
+        txtConfirmPwd.setText("");
     }
 
     private void setGroupLayout() {

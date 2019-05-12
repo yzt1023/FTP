@@ -2,7 +2,7 @@ package cn.edu.shu.server.ui;
 
 import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.log.MsgPane;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.server.db.DBConnPool;
 import cn.edu.shu.server.ftp.FTPServer;
 
@@ -23,7 +23,7 @@ public class MainFrame extends JFrame implements MsgListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLocation(600, 200);
         this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
-        Image icon = Toolkit.getDefaultToolkit().getImage(Utils.getInstance().getResourcePath(getClass(), "logo.png"));
+        Image icon = Toolkit.getDefaultToolkit().getImage(CommonUtils.getInstance().getResourcePath(getClass(), "logo.png"));
         this.setIconImage(icon);
 
         this.addWindowListener(new WindowAdapter() {

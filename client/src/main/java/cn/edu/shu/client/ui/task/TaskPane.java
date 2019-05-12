@@ -6,7 +6,7 @@
 package cn.edu.shu.client.ui.task;
 
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +15,7 @@ import java.awt.event.MouseEvent;
 
 public class TaskPane extends JPanel {
     private TaskTableModel tableModel;
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
 
     public TaskPane() {
         super();

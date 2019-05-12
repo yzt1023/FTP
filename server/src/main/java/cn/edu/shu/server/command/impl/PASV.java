@@ -6,7 +6,7 @@
 package cn.edu.shu.server.command.impl;
 
 import cn.edu.shu.common.ftp.FTPReplyCode;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.DataConnection;
 import cn.edu.shu.server.ftp.FTPRequest;
@@ -35,7 +35,7 @@ public class PASV implements Command {
             return;
         }
 
-        String addr = Utils.getInstance().getStringByAddress(socketAddress);
+        String addr = CommonUtils.getInstance().getStringByAddress(socketAddress);
         session.println(FTPReplyCode.ENTERING_PASSIVE_MODE.getReply() + "(" + addr + ")");
     }
 }

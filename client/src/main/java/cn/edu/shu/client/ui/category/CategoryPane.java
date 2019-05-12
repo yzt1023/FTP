@@ -5,7 +5,7 @@
 
 package cn.edu.shu.client.ui.category;
 
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
@@ -25,7 +25,7 @@ public abstract class CategoryPane extends JPanel {
     // tableMenu
     JPopupMenu tableMenu;
     ActionListener menuListener;
-    Utils utils = Utils.getInstance();
+    CommonUtils utils = CommonUtils.getInstance();
     Logger logger = Logger.getLogger(getClass());
     private JButton imgUp;
     private JScrollPane scrollTable;

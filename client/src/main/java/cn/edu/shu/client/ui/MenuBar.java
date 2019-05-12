@@ -7,7 +7,7 @@ package cn.edu.shu.client.ui;
 
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 
 import javax.swing.*;
 import java.util.Calendar;
@@ -23,7 +23,7 @@ public class MenuBar extends JMenuBar {
     private JMenuItem aboutItem;
     private JMenuItem registerItem;
     private MainFrame frame;
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
 
     MenuBar(MainFrame frame) {
         super();
@@ -45,12 +45,12 @@ public class MenuBar extends JMenuBar {
         menuMode.setMnemonic('m');
 
         passiveModeItem = new JCheckBoxMenuItem("Passive Mode");
-        passiveModeItem.setSelected(true);
+        passiveModeItem.setSelected(frame.getConfig().isDefaultPassive());
         passiveModeItem.setMnemonic('p');
         menuMode.add(passiveModeItem);
 
         secureModeItem = new JCheckBoxMenuItem("Secure Mode");
-        secureModeItem.setSelected(true);
+        secureModeItem.setSelected(frame.getConfig().isDefaultPassive());
         secureModeItem.setMnemonic('s');
         menuMode.add(secureModeItem);
         this.add(menuMode);

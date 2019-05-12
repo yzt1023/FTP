@@ -9,7 +9,7 @@ import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.util.TransferUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -70,7 +70,7 @@ public class RemoteTableModel extends AbstractTableModel {
                 MessageUtils.showErrorMessage(Constants.EMPTY_FILENAME, Constants.RENAME_FILE_TITLE);
             } else if (!file.getName().equals(newName)) {
                 String parentPath = categoryPane.getCurrentFile().getPath();
-                String newPath = Utils.getInstance().getPath(parentPath, newName);
+                String newPath = CommonUtils.getInstance().getPath(parentPath, newName);
                 if (categoryPane.renameFile(file.getPath(), newPath)) {
                     file.setName(newName);
                     file.setPath(newPath);

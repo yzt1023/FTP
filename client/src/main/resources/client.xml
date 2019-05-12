@@ -1,0 +1,11 @@
+<!--
+  ~ Written By : Skye You
+  ~ Copyright (c) 2018 - 2019. All Rights Reserved.
+-->
+
+<ClientConfig>
+    <encoding>UTF-8</encoding>
+    <defaultPassive>true</defaultPassive>
+    <defaultSecure>true</defaultSecure>
+    <socketTimeout>0</socketTimeout>
+</ClientConfig>

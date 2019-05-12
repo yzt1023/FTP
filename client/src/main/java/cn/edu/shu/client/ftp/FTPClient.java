@@ -5,16 +5,19 @@
 
 package cn.edu.shu.client.ftp;
 
+import cn.edu.shu.client.config.SystemConfig;
 import cn.edu.shu.client.exception.ConnectionException;
 import cn.edu.shu.client.exception.FTPException;
 import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
+import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.log.MsgListener;
+import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -26,10 +29,12 @@ import java.util.Date;
 import java.util.List;
 
 public class FTPClient {
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
+    private SecurityUtils securityUtils;
+    private MD5 md5;
     private String currentPath;
-    private boolean passiveMode = true;
-    private boolean secureMode = true;
+    private boolean passiveMode;
+    private boolean secureMode;
     private long restartOffset;
     private DataType dataType;
     private String encoding;
@@ -41,11 +46,15 @@ public class FTPClient {
     private String response;
     private MsgListener msgListener;
 
-    public FTPClient(MsgListener msgListener) {
+    public FTPClient(MsgListener msgListener, SystemConfig config) {
         this.msgListener = msgListener;
         this.dataType = DataType.BINARY;
         this.restartOffset = 0L;
-        this.encoding = "UTF-8";
+        this.encoding = config.getEncoding();
+        this.passiveMode = config.isDefaultPassive();
+        this.secureMode = config.isDefaultSecure();
+        securityUtils = SecurityUtils.getInstance();
+        md5 = securityUtils.getMd5();
     }
 
     private static String getValue(String line, String key) {
@@ -72,6 +81,7 @@ public class FTPClient {
         if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
             throw new FTPException(response);
 
+        password = md5.getMD5(password);
         executeCommand(FTPCommand.PASS + " " + password);
         if (!FTPReplyCode.find(getReplyCode()).isOkay())
             throw new FTPException(response);
@@ -89,6 +99,8 @@ public class FTPClient {
     public synchronized void register(String username, String password) throws ConnectionException, FTPException {
         if (controlConnection == null)
             throw new FTPException(Constants.CONNECT_FIRST);
+
+        password = md5.getMD5(password);
         executeCommand(FTPCommand.REG + " " + username + " " + password);
         if (!FTPReplyCode.find(getReplyCode()).isOkay())
             throw new FTPException(response);
@@ -397,5 +409,9 @@ public class FTPClient {
 
     public User getUser() {
         return user;
+    }
+
+    public SecurityUtils getSecurityUtils() {
+        return securityUtils;
     }
 }

@@ -7,7 +7,7 @@ package cn.edu.shu.server.ui;
 
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.server.ui.user.UserDialog;
 
 import javax.swing.*;
@@ -25,7 +25,7 @@ class MenuBar extends JMenuBar {
     private JMenuItem userItem;
     private JMenuItem aboutItem;
     private MainFrame frame;
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
 
     public MenuBar(MainFrame frame) {
         super();

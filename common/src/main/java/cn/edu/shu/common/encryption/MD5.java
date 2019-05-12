@@ -140,7 +140,11 @@ public class MD5 {
         c = encode(c);
         d = encode(d);
 
-        return getString(a, b, c, d).substring(8, 24);
+        return getString(a, b, c, d);
+    }
+
+    public String get16Md5(byte[] input){
+        return getMD5(input).substring(8, 24);
     }
 
     public String getMD5(String message){

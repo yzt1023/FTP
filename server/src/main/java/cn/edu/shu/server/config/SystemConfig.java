@@ -1,6 +1,6 @@
-package cn.edu.shu.server.util;
+package cn.edu.shu.server.config;
 
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -9,15 +9,16 @@ import org.jdom2.input.SAXBuilder;
 import java.io.File;
 import java.io.IOException;
 
-public class ConfigUtils {
-    private static ConfigUtils instance = new ConfigUtils();
+public class SystemConfig {
+    private static SystemConfig instance = new SystemConfig();
     private String rootPath;
+    private String encoding;
     private int loginTimeout;
     private int cnctTimeout;
     private String welcomeMessage;
 
     public void initConfig() {
-        String path = Utils.getInstance().getResourcePath(ConfigUtils.class, "server.xml");
+        String path = CommonUtils.getInstance().getResourcePath(getClass(), "server.xml");
         assert path != null;
         File file = new File(path);
         SAXBuilder builder = new SAXBuilder();
@@ -34,6 +35,7 @@ public class ConfigUtils {
             }*/
             // settings
             Element settingTag = configTag.getChild("settings");
+            encoding = settingTag.getChildText("encoding");
             loginTimeout = Integer.parseInt(settingTag.getChildText("loginTimeout"));
             cnctTimeout = Integer.parseInt(settingTag.getChildText("connectionTimeout"));
             welcomeMessage = settingTag.getChildText("welcomeMessage");
@@ -42,7 +44,7 @@ public class ConfigUtils {
         }
     }
 
-    public static ConfigUtils getInstance() {
+    public static SystemConfig getInstance() {
         return instance;
     }
 
@@ -60,5 +62,9 @@ public class ConfigUtils {
 
     public String getWelcomeMessage() {
         return welcomeMessage;
+    }
+
+    public String getEncoding() {
+        return encoding;
     }
 }

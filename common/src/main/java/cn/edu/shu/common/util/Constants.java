@@ -10,9 +10,8 @@ public interface Constants {
     String LINE_SEPARATOR = System.getProperty("line.separator");
     byte[] EOL = LINE_SEPARATOR.getBytes();
     String NET_EOL = "\r\n";
-    String ENCRYPTION_AES = "AES";
     String ANONYMOUS_USER = "anonymous";
-    int DEFAULT_PORT = 21;
+    int DEFAULT_PORT = 2121;
     String DEFAULT_IP = "127.0.0.1";
     int TIME_OUT = 500;
     String DATE_PATTERN = "yyyyMMddHHmm";

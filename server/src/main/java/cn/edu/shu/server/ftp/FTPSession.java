@@ -7,10 +7,10 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
-import cn.edu.shu.common.util.AESUtils;
+import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.db.UserDao;
-import cn.edu.shu.server.util.ConfigUtils;
+import cn.edu.shu.server.config.SystemConfig;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
@@ -30,17 +30,17 @@ public class FTPSession {
     private boolean secureMode;
     private String serverKey;
     private String clientKey;
-    private AESUtils aesUtils;
+    private SecurityUtils securityUtils;
 
     public FTPSession(ControlConnection controlConnection) {
+        this.controlConnection = controlConnection;
         this.currentPath = "/";
         this.offset = 0L;
-        this.rootPath = ConfigUtils.getInstance().getRootPath();
+        this.rootPath = controlConnection.getRootPath();
         this.userDao = new UserDao();
         this.fileSystemView = FileSystemView.getFileSystemView();
         this.dataConnection = new DataConnection();
-        this.controlConnection = controlConnection;
-        this.aesUtils = AESUtils.getInstance();
+        this.securityUtils = SecurityUtils.getInstance();
     }
 
     public User getUser() {
@@ -173,19 +173,19 @@ public class FTPSession {
         this.clientKey = clientKey;
     }
 
-    public AESUtils getAesUtils() {
-        return aesUtils;
+    public SecurityUtils getSecurityUtils() {
+        return securityUtils;
     }
 
     public void generateKey() {
-        serverKey = aesUtils.generateKey();
+        serverKey = securityUtils.generateKey();
     }
 
     String decodeRequest(String request) {
-        return aesUtils.decrypt(request, clientKey);
+        return securityUtils.decrypt(request, clientKey);
     }
 
     String encodeResponse(String response){
-        return aesUtils.encrypt(response, serverKey);
+        return securityUtils.encrypt(response, serverKey);
     }
 }

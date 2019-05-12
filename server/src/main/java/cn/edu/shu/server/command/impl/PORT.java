@@ -6,7 +6,7 @@
 package cn.edu.shu.server.command.impl;
 
 import cn.edu.shu.common.ftp.FTPReplyCode;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.DataConnection;
 import cn.edu.shu.server.ftp.FTPRequest;
@@ -28,7 +28,7 @@ public class PORT implements Command {
         }
 
         String str = request.getArgument();
-        InetSocketAddress socketAddress = Utils.getInstance().getAddressByString(str);
+        InetSocketAddress socketAddress = CommonUtils.getInstance().getAddressByString(str);
         if(socketAddress == null){
             session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
             return;

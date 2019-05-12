@@ -1,23 +1,14 @@
 package cn.edu.shu.server.ftp;
 
-import cn.edu.shu.common.ftp.SSLContextFactory;
 import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
-import cn.edu.shu.server.util.ConfigUtils;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
+import cn.edu.shu.server.config.SystemConfig;
 import org.apache.log4j.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -35,7 +26,7 @@ public class FTPServer extends Thread {
     private boolean stop;
 
     public FTPServer() {
-        ConfigUtils.getInstance().initConfig();
+        SystemConfig.getInstance().initConfig();
         logger = Logger.getLogger(getClass());
         sessions = new ArrayList<>();
         int corePoolSize = Runtime.getRuntime().availableProcessors();

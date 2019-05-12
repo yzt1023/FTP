@@ -1,8 +1,8 @@
 package cn.edu.shu.client.ui;
 
+import cn.edu.shu.client.config.SystemConfig;
 import cn.edu.shu.client.exception.ConnectionException;
 import cn.edu.shu.client.exception.FTPException;
-import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.client.ftp.FTPClient;
 import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.ConnectListener;
@@ -17,7 +17,7 @@ import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.log.MsgPane;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
@@ -41,17 +41,20 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private MenuBar menuBar;
     private FTPClient ftpClient;
     private Deque<Task> taskQueue;
-    private Utils utils;
+    private CommonUtils utils;
     private TransferUtils transferUtils;
     private Logger logger = Logger.getLogger(getClass());
+    private SystemConfig config;
 
     public MainFrame() {
         super("FTPClient");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLocation(50, 50);
         this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
-        utils = Utils.getInstance();
+        utils = CommonUtils.getInstance();
         transferUtils = TransferUtils.getInstance();
+        config = SystemConfig.getInstance();
+        config.initConfig();
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
         this.setIconImage(icon);
 
@@ -59,7 +62,6 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
         initComponents();
         setGroupLayout();
-        System.setProperty("javax.net.debug", "ssl,handshake");
     }
 
     private void initComponents() {
@@ -76,7 +78,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         tabbedPane.addTab("transfer process", taskPane);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        ftpClient = new FTPClient(this);
+        ftpClient = new FTPClient(this, config);
 //        ftpClient.setEncoding("GBK");
 
         // category panel
@@ -238,6 +240,10 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
     FTPClient getFtpClient() {
         return ftpClient;
+    }
+
+    public SystemConfig getConfig() {
+        return config;
     }
 }
 // TODO: 3/2/2019 change layout by mouse drag

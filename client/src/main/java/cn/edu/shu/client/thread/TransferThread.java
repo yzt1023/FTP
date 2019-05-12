@@ -14,7 +14,7 @@ import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.util.Constants;
-import cn.edu.shu.common.util.Utils;
+import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.filechooser.FileSystemView;
@@ -27,7 +27,7 @@ public class TransferThread extends Thread {
     private FTPClient ftpClient;
     private TransferListener listener;
     private FileSystemView fileSystemView = FileSystemView.getFileSystemView();
-    private Utils utils = Utils.getInstance();
+    private CommonUtils utils = CommonUtils.getInstance();
     private Logger logger = Logger.getLogger(getClass());
     public Task task;
 

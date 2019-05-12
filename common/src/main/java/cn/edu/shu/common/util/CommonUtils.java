@@ -18,18 +18,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-public class Utils {
+public class CommonUtils {
 
-    private static Utils instance = new Utils();
+    private static CommonUtils instance = new CommonUtils();
     private final Icon FOLDER_ICON = new ImageIcon(getResourcePath(getClass(), "folder_icon.png"));
     private final Icon FILE_ICON = new ImageIcon(getResourcePath(getClass(), "file_icon.png"));
     private Logger logger;
 
-    private Utils() {
+    private CommonUtils() {
         logger = Logger.getLogger(getClass());
     }
 
-    public static Utils getInstance() {
+    public static CommonUtils getInstance() {
         return instance;
     }
 
