@@ -7,11 +7,11 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
+import cn.edu.shu.common.util.AESUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.db.UserDao;
 import cn.edu.shu.server.util.ConfigUtils;
 
-import javax.net.ssl.SSLContext;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.net.InetAddress;
@@ -27,6 +27,10 @@ public class FTPSession {
     private DataConnection dataConnection;
     private ControlConnection controlConnection;
     private FileSystemView fileSystemView;
+    private boolean secureMode;
+    private String serverKey;
+    private String clientKey;
+    private AESUtils aesUtils;
 
     public FTPSession(ControlConnection controlConnection) {
         this.currentPath = "/";
@@ -36,6 +40,7 @@ public class FTPSession {
         this.fileSystemView = FileSystemView.getFileSystemView();
         this.dataConnection = new DataConnection();
         this.controlConnection = controlConnection;
+        this.aesUtils = AESUtils.getInstance();
     }
 
     public User getUser() {
@@ -72,6 +77,18 @@ public class FTPSession {
 
     public void println(String message) {
         controlConnection.println(message);
+    }
+
+    public String readRequest() {
+        return controlConnection.readRequest();
+    }
+
+    public String readLine(){
+        return controlConnection.readLine();
+    }
+
+    public void sendLine(String line){
+        controlConnection.sendLine(line);
     }
 
     public void close() {
@@ -132,7 +149,43 @@ public class FTPSession {
         this.offset = 0L;
     }
 
-    void setSslContext(SSLContext sslContext) {
-        dataConnection.setSslContext(sslContext);
+    boolean isSecureMode() {
+        return secureMode;
+    }
+
+    public void setSecureMode(boolean secureMode) {
+        this.secureMode = secureMode;
+    }
+
+    public String getServerKey() {
+        return serverKey;
+    }
+
+    public void setServerKey(String serverKey) {
+        this.serverKey = serverKey;
+    }
+
+    public String getClientKey() {
+        return clientKey;
+    }
+
+    public void setClientKey(String clientKey) {
+        this.clientKey = clientKey;
+    }
+
+    public AESUtils getAesUtils() {
+        return aesUtils;
+    }
+
+    public void generateKey() {
+        serverKey = aesUtils.generateKey();
+    }
+
+    String decodeRequest(String request) {
+        return aesUtils.decrypt(request, clientKey);
+    }
+
+    String encodeResponse(String response){
+        return aesUtils.encrypt(response, serverKey);
     }
 }

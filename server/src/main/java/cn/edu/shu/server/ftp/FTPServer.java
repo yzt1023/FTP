@@ -5,6 +5,7 @@ import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.Utils;
 import cn.edu.shu.server.util.ConfigUtils;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import org.apache.log4j.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -32,7 +33,6 @@ public class FTPServer extends Thread {
     private List<FTPSession> sessions;
     private boolean suspend;
     private boolean stop;
-    private SSLContext sslContext;
 
     public FTPServer() {
         ConfigUtils.getInstance().initConfig();
@@ -41,17 +41,7 @@ public class FTPServer extends Thread {
         int corePoolSize = Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(corePoolSize, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         try {
-            sslContext = SSLContextFactory.createSSLContext(getClass());
-            assert sslContext != null;
-            SSLServerSocketFactory factory = sslContext.getServerSocketFactory();
-            SSLServerSocket server = (SSLServerSocket) factory.createServerSocket(Constants.DEFAULT_PORT);
-            //add anonymous cipher suites
-            String[] suites = server.getSupportedCipherSuites();
-            server.setEnabledCipherSuites(suites);
-            server.setUseClientMode(false);
-            server.setNeedClientAuth(true);
-            serverSocket = server;
-//            serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
+            serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -81,8 +71,6 @@ public class FTPServer extends Thread {
                 socket.setTcpNoDelay(true);  // close the buffer of socket to ensure transfer speed
                 ControlConnection controlConnection = new ControlConnection(socket);
                 controlConnection.setListener(listener);
-                FTPSession session = controlConnection.getSession();
-                session.setSslContext(sslContext);
                 sessions.add(controlConnection.getSession());
                 executor.execute(controlConnection);
             }

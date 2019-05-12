@@ -54,9 +54,7 @@ public class CommandFactory {
         commandMap.put(FTPCommand.NOOP, new NOOP());
         commandMap.put(FTPCommand.PASS, new PASS());
         commandMap.put(FTPCommand.PASV, new PASV());
-        commandMap.put(FTPCommand.PBSZ, new PBSZ());
         commandMap.put(FTPCommand.PORT, new PORT());
-        commandMap.put(FTPCommand.PROT, new PROT());
         commandMap.put(FTPCommand.PWD, new PWD());
         commandMap.put(FTPCommand.QUIT, new QUIT());
         commandMap.put(FTPCommand.RETR, new RETR());

@@ -64,18 +64,25 @@ public class ControlConnection implements Runnable, MsgListener {
 
     @Override
     public void println(String reply) {
+        log(reply);
+
+        if(session.isSecureMode())
+            reply = session.encodeResponse(reply);
+
         controlWriter.println(reply);
-        listener.println(reply);
-        logger.info(reply);
     }
 
-    private String readRequest() {
+    String readRequest() {
         try {
             request = controlReader.readLine();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
+
+        if(session.isSecureMode())
+            request = session.decodeRequest(request);
+
         if (request != null){
             if(request.startsWith(FTPCommand.PASS)){
                 listener.println(FTPCommand.PASS + " ******");
@@ -86,6 +93,19 @@ public class ControlConnection implements Runnable, MsgListener {
             }
         }
         return request;
+    }
+
+    String readLine(){
+        try {
+            return controlReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    void sendLine(String line){
+        controlWriter.println(line);
     }
 
     private void closeSocket() {
@@ -125,5 +145,10 @@ public class ControlConnection implements Runnable, MsgListener {
 
     String getEncoding() {
         return encoding;
+    }
+
+    void log(String message) {
+        listener.println(message);
+        logger.info(message);
     }
 }

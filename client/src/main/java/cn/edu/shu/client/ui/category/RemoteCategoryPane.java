@@ -215,7 +215,7 @@ public class RemoteCategoryPane extends CategoryPane {
 
     boolean renameFile(String src, String des) {
         try {
-            ftpClient.rename(src, des);
+            return ftpClient.rename(src, des);
         } catch (ConnectionException e) {
             connectionExceptionHandle(e);
             return false;
@@ -223,7 +223,6 @@ public class RemoteCategoryPane extends CategoryPane {
             noPermissionExceptionHandle(e);
             return false;
         }
-        return true;
     }
 
     @Override

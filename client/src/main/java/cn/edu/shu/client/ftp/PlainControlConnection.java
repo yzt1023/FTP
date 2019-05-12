@@ -16,11 +16,11 @@ import java.net.Socket;
 
 public class PlainControlConnection implements ControlConnection {
 
-    Socket socket;
+    private Socket socket;
     BufferedReader reader;
     PrintWriter writer;
-    FTPClient client;
-    private MsgListener listener;
+    private FTPClient client;
+    MsgListener listener;
 
     PlainControlConnection(FTPClient client) {
         this.client = client;
@@ -57,6 +57,7 @@ public class PlainControlConnection implements ControlConnection {
                 } while (!line.startsWith(replyCode + " "));
             }
             String reply = builder.toString();
+            reply = decodeReply(reply);
             listener.println("> " + reply);
             return reply;
         } catch (IOException e) {
@@ -64,15 +65,25 @@ public class PlainControlConnection implements ControlConnection {
         }
     }
 
+    public String decodeReply(String reply){
+        return reply;
+    }
+
     @Override
     public void sendCommand(String command) throws ConnectionException {
-        writer.println(command);
         if (command.startsWith(FTPCommand.PASS))
             listener.println(FTPCommand.PASS + " ******");
         else
             listener.println(command);
+
+        command = encodeCommand(command);
+        writer.println(command);
         if (writer.checkError())
             throw new ConnectionException(Constants.SEND_COMMAND_ERROR);
+    }
+
+    public String encodeCommand(String command){
+        return command;
     }
 
     @Override
