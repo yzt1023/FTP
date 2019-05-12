@@ -92,10 +92,10 @@ public class ControlConnection implements Runnable, MsgListener {
             return null;
         }
 
-        if (session.isSecureMode())
-            request = session.decodeRequest(request);
-
         if (request != null) {
+            if (session.isSecureMode())
+                request = session.decodeRequest(request);
+
             if (request.startsWith(FTPCommand.PASS) || request.startsWith(FTPCommand.REG)) {
                 String temp = request.substring(0, request.lastIndexOf(" "));
                 log(temp + " ******");

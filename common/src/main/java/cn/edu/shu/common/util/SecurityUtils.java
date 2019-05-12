@@ -10,6 +10,7 @@ import cn.edu.shu.common.encryption.AES128;
 import cn.edu.shu.common.encryption.Base64;
 import cn.edu.shu.common.encryption.MD5;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class SecurityUtils {
@@ -27,19 +28,38 @@ public class SecurityUtils {
         return instance;
     }
 
-    public byte[] encrypt(byte[] msg, byte[] key) {
-        msg = fillText(msg);
+    /**
+     * attention: the len of the return array is end + fillLen;
+     * @param msg array to encrypted
+     * @param end the end of array
+     * @param key key used to encrypt
+     * @return the array after encrypted
+     */
+    public byte[] encrypt(byte[] msg, int end, byte[] key) {
+        byte[] newArray;
+        int fillLen = 16 - (end % 16);
+
+        if(end < msg.length && msg.length % 16 == 0)
+            newArray = msg;
+        else {
+            newArray = new byte[end + fillLen];
+            System.arraycopy(msg, 0, newArray, 0, end);
+        }
+        for (int i = 0; i < fillLen; i++)
+            newArray[end + i] = (byte) (fillLen & 0xff);
+
         key = md5.get16Md5(key).getBytes();
         try {
-            msg = aes128.encrypt(msg, key);
+            aes128.encrypt(newArray, 0, end + fillLen, key);
         } catch (EncryptionException e) {
             e.printStackTrace();
         }
-        return msg;
+        return newArray;
     }
 
     public String encrypt(String msg, String key) {
-        byte[] bytes = encrypt(msg.getBytes(), key.getBytes());
+        byte[] bytes = msg.getBytes();
+        bytes = encrypt(bytes, bytes.length, key.getBytes());
         try {
             return Base64.encode(bytes);
         } catch (EncryptionException e) {
@@ -48,40 +68,26 @@ public class SecurityUtils {
         }
     }
 
-    public byte[] decrypt(byte[] msg, byte[] key) {
+    public int decrypt(byte[] msg, int end, byte[] key) {
         try {
             key = md5.get16Md5(key).getBytes();
-            aes128.decrypt(msg, key);
+            aes128.decrypt(msg, 0, end, key);
         } catch (EncryptionException e) {
             e.printStackTrace();
         }
-        return restoreTest(msg);
+        int len = msg[end - 1];
+        return end - len;
     }
 
     public String decrypt(String msg, String key) {
-        byte[] bytes = new byte[0];
         try {
-            bytes = Base64.decode(msg);
+            byte[] bytes = Base64.decode(msg);
+            int len = decrypt(bytes, bytes.length, key.getBytes());
+            return new String(Arrays.copyOfRange(bytes, 0, len));
         } catch (EncryptionException e) {
             e.printStackTrace();
         }
-        return new String(decrypt(bytes, key.getBytes()));
-    }
-
-    private byte[] fillText(byte[] bytes) {
-        int fillLen = 16 - bytes.length % 16;
-        byte[] newByte = new byte[bytes.length + fillLen];
-        System.arraycopy(bytes, 0, newByte, 0, bytes.length);
-        for (int i = 0; i < fillLen; i++)
-            newByte[bytes.length + i] = (byte) (fillLen & 0xff);
-        return newByte;
-    }
-
-    private byte[] restoreTest(byte[] bytes) {
-        int len = bytes[bytes.length - 1];
-        byte[] newByte = new byte[bytes.length - len];
-        System.arraycopy(bytes, 0, newByte, 0, newByte.length);
-        return newByte;
+        return null;
     }
 
     public String generateKey(){

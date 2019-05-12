@@ -15,9 +15,9 @@ import cn.edu.shu.client.ui.task.TaskPane;
 import cn.edu.shu.client.util.TransferUtils;
 import cn.edu.shu.common.log.MsgListener;
 import cn.edu.shu.common.log.MsgPane;
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.CommonUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
@@ -174,11 +174,13 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
             File file = task.getFile();
             if (file.isFile() && file.getPath().startsWith(Constants.TEMP_DIR))
                 localCategoryPane.openFile(file);
-            else
+            else if (file.getParentFile() == localCategoryPane.getCurrentFile())
                 localCategoryPane.getTableModel().addRow(task.getFile());
         } else {
-            remoteCategoryPane.getCurrentFile().addChild(task.getFtpFile());
-            remoteCategoryPane.getTableModel().addRow(task.getFtpFile());
+            FTPFile file = task.getFtpFile();
+            file.getParent().addChild(file);
+            if (remoteCategoryPane.getCurrentFile() == file.getParent())
+                remoteCategoryPane.getTableModel().addRow(task.getFtpFile());
         }
     }
 
@@ -189,7 +191,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
 
     @Override
     public boolean startConnect(String host, int port, String username, String password) {
-        try{
+        try {
             ftpClient.connect(host, port);
             ftpClient.login(username, password);
         } catch (ConnectionException | FTPException e) {
@@ -242,7 +244,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         return ftpClient;
     }
 
-    public SystemConfig getConfig() {
+    SystemConfig getConfig() {
         return config;
     }
 }

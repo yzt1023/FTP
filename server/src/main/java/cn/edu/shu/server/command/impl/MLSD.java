@@ -17,7 +17,9 @@ import org.apache.log4j.Logger;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class MLSD implements Command {
 
@@ -52,12 +54,12 @@ public class MLSD implements Command {
 
         DataConnection dataConnection = session.getDataConnection();
         FileSystemView fileSystemView = session.getFileSystemView();
-        StringBuilder builder = new StringBuilder();
+        List<String> files = new ArrayList<>();
         if(file.isFile())
-            builder.append(formatFile(file));
+            files.add(formatFile(file));
         else {
             for (File f : fileSystemView.getFiles(file, false))
-                builder.append(formatFile(f));
+                files.add(formatFile(f));
         }
 
         try {
@@ -69,7 +71,7 @@ public class MLSD implements Command {
         }
 
         try {
-            dataConnection.transferToClient(session, builder.toString());
+            dataConnection.transferToClient(session, files);
         }catch (IOException e){
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
@@ -90,7 +92,7 @@ public class MLSD implements Command {
         line += ";" + Constants.KEY_MODIFY + modify;
         if (!f.isDirectory())
             line += ";" + Constants.KEY_SIZE + f.length();
-        line += "; " + f.getName() + Constants.LINE_SEPARATOR;
+        line += "; " + f.getName();
         return line;
     }
 }

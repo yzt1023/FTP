@@ -132,14 +132,6 @@ public class FTPClient {
         controlConnection.close();
     }
 
-    public void setPassiveMode(boolean passiveMode) {
-        this.passiveMode = passiveMode;
-    }
-
-    public void setSecureMode(boolean secureMode) {
-        this.secureMode = secureMode;
-    }
-
     private synchronized Socket establishDataConnection(String command)
             throws ConnectionException, IOException, FTPException {
         if (passiveMode)
@@ -201,6 +193,10 @@ public class FTPClient {
         String line;
         List<FTPFile> files = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
+            if(isSecureMode()) {
+                line = decodeMessage(line);
+            }
+
             FTPFile child = parseMLSD(line, parent);
             files.add(child);
         }
@@ -229,10 +225,6 @@ public class FTPClient {
             throw new FTPException(response);
 
         currentPath = response.substring(response.indexOf('\"') + 1, response.lastIndexOf('\"'));
-    }
-
-    public String getCurrentPath() {
-        return currentPath;
     }
 
     /**
@@ -379,6 +371,30 @@ public class FTPClient {
         return file;
     }
 
+    public int decodeBytes(byte[] bytes, int len) {
+        if(controlConnection instanceof SecureControlConnection) {
+            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+            return securityUtils.decrypt(bytes, len, connection.getServerKey().getBytes());
+        }
+        return len;
+    }
+
+    public byte[] encodeBytes(byte[] bytes, int len) {
+        if(controlConnection instanceof SecureControlConnection) {
+            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+            return securityUtils.encrypt(bytes, len, connection.getClientKey().getBytes());
+        }
+        return bytes;
+    }
+
+    public String decodeMessage(String message){
+        if(controlConnection instanceof SecureControlConnection) {
+            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+            return securityUtils.decrypt(message, connection.getServerKey());
+        }
+        return message;
+    }
+
     public void setRestartOffset(long restartOffset) {
         this.restartOffset = restartOffset;
     }
@@ -413,5 +429,25 @@ public class FTPClient {
 
     public SecurityUtils getSecurityUtils() {
         return securityUtils;
+    }
+
+    public String getCurrentPath() {
+        return currentPath;
+    }
+
+    public void setPassiveMode(boolean passiveMode) {
+        this.passiveMode = passiveMode;
+    }
+
+    public boolean isPassiveMode() {
+        return passiveMode;
+    }
+
+    public void setSecureMode(boolean secureMode) {
+        this.secureMode = secureMode;
+    }
+
+    public boolean isSecureMode() {
+        return secureMode;
     }
 }

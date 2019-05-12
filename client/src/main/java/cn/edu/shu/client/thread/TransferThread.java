@@ -29,7 +29,7 @@ public class TransferThread extends Thread {
     private FileSystemView fileSystemView = FileSystemView.getFileSystemView();
     private CommonUtils utils = CommonUtils.getInstance();
     private Logger logger = Logger.getLogger(getClass());
-    public Task task;
+    private Task task;
 
     public TransferThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener) {
         this.queue = queue;
@@ -65,8 +65,8 @@ public class TransferThread extends Thread {
                     logger.error(e.getMessage(), e);
                 } finally {
                     updateState(result);
+                    queue.remove();
                 }
-                queue.remove();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
@@ -88,13 +88,18 @@ public class TransferThread extends Thread {
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
             raf.seek(offset);
             FileOutputStream out = new FileOutputStream(raf.getFD());
-            byte[] bytes = new byte[Constants.KB];
-            int len;
+            int buffer = Constants.KB + 16, len;
+            byte[] bytes = new byte[buffer];
             long read = offset;
             boolean lastWasCR = false;
-            while ((len = in.read(bytes)) != -1) {
+            while ((len = in.read(bytes, 0, buffer)) != -1) {
                 if(Constants.STATE_PAUSE.equals(task.getState()))
                     break;
+
+                if(ftpClient.isSecureMode()) {
+                    len = ftpClient.decodeBytes(bytes, len);
+                }
+
                 if (ftpClient.getDataType() == DataType.BINARY || utils.noConversionRequired())
                     out.write(bytes, 0, len);
                 else {
@@ -141,22 +146,31 @@ public class TransferThread extends Thread {
                 offset = 0;
             raf.seek(offset);
             FileInputStream in = new FileInputStream(raf.getFD());
-            byte[] bytes = new byte[Constants.KB];
-            int len;
+            byte[] bytes = new byte[Constants.KB + 16];
+            int readLen, writeLen;
             long read = offset;
             boolean lastWasCR = false;
-            while ((len = in.read(bytes)) != -1) {
+            while ((readLen = in.read(bytes, 0, Constants.KB)) != -1) {
                 if(Constants.STATE_PAUSE.equals(task.getState()))
                     break;
+
+                if(ftpClient.isSecureMode()) {
+                    bytes = ftpClient.encodeBytes(bytes, readLen);
+                    int fill = 16 - (readLen % 16);
+                    writeLen = readLen + fill;
+                }else{
+                    writeLen = readLen;
+                }
+
                 if (ftpClient.getDataType() == DataType.BINARY)
-                    out.write(bytes, 0, len);
+                    out.write(bytes, 0, writeLen);
                 else {
-                    for (byte b : bytes) {
-                        lastWasCR = utils.toNetWrite(lastWasCR, out, b);
+                    for (int i = 0; i < writeLen; i++) {
+                        lastWasCR = utils.toNetWrite(lastWasCR, out, bytes[i]);
                     }
                 }
-                read += len;
-                notifyProgress(len);
+                read += readLen;
+                notifyProgress(readLen);
             }
             ftpFile.setSize(read);
             out.flush();

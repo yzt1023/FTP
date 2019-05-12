@@ -50,21 +50,20 @@ public class PlainControlConnection implements ControlConnection {
                 throw new ConnectionException();
 
             line = decodeReply(line);
+            listener.println("> " + line);
 
             String replyCode = line.substring(0, 3);
             StringBuilder builder = new StringBuilder(line);
-            StringBuilder logBuilder = new StringBuilder(line);
             if (line.charAt(3) == '-') {
                 do {
                     line = reader.readLine();
                     line = decodeReply(line);
 
                     builder.append(Constants.LINE_SEPARATOR).append(line);
-                    logBuilder.append(Constants.LINE_SEPARATOR).append("> ").append(line);
+                    listener.println("> " + line);
                 } while (!line.startsWith(replyCode + " "));
             }
 
-            listener.println("> " + logBuilder.toString());
             return builder.toString();
         } catch (IOException e) {
             throw new ConnectionException(e.getMessage(), e);

@@ -72,4 +72,19 @@ public class SecureControlConnection extends PlainControlConnection {
         else
             return command;
     }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        clientKey = null;
+        serverKey = null;
+    }
+
+    public String getClientKey() {
+        return clientKey;
+    }
+
+    public String getServerKey() {
+        return serverKey;
+    }
 }

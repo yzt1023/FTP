@@ -15,6 +15,7 @@ import cn.edu.shu.server.config.SystemConfig;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.net.InetAddress;
+import java.util.Arrays;
 
 public class FTPSession {
     private UserDao userDao;
@@ -187,5 +188,13 @@ public class FTPSession {
 
     String encodeResponse(String response){
         return securityUtils.encrypt(response, serverKey);
+    }
+
+    int decodeBytes(byte[] bytes, int len) {
+        return securityUtils.decrypt(bytes, len, clientKey.getBytes());
+    }
+
+    byte[] encodeBytes(byte[] bytes, int len){
+        return securityUtils.encrypt(bytes, len, serverKey.getBytes());
     }
 }

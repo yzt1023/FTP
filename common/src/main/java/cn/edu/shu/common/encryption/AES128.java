@@ -246,8 +246,8 @@ public class AES128 {
         return result ^ RCON[r - 1];
     }
 
-    public byte[] encrypt(byte[] message, byte[] key) throws EncryptionException {
-        if (message.length % 16 != 0)
+    public byte[] encrypt(byte[] message, int start, int end, byte[] key) throws EncryptionException {
+        if ((end - start) % 16 != 0)
             throw new EncryptionException("The length of message must be a multiple of 16!");
 
         if (key.length != 16)
@@ -256,7 +256,7 @@ public class AES128 {
         extendKey(key);
 
         int[][] matrix;
-        for (int i = 0; i < message.length; i += 16) {
+        for (int i = start; i < end; i += 16) {
             matrix = byteArrayToMatrix(message, i);
 
             addRoundKey(matrix, 0);
@@ -275,6 +275,10 @@ public class AES128 {
         return message;
     }
 
+    public byte[] encrypt(byte[] message, byte[] key) throws EncryptionException {
+        return encrypt(message, 0, message.length, key);
+    }
+
     private int[][] byteArrayToMatrix(byte[] bytes, int index) {
         int[][] matrix = new int[4][4];
         for (int i = 0; i < matrix.length; i++)
@@ -289,8 +293,8 @@ public class AES128 {
                 bytes[index++] = (byte) (matrix[j][i] & 0xff);
     }
 
-    public byte[] decrypt(byte[] message, byte[] key) throws EncryptionException {
-        if (message.length % 16 != 0)
+    public byte[] decrypt(byte[] message, int start, int end, byte[] key) throws EncryptionException {
+        if ((end - start) % 16 != 0)
             throw new EncryptionException("The length of message must be a multiple of 16!");
 
         if (key.length != 16)
@@ -298,7 +302,7 @@ public class AES128 {
 
         extendKey(key);
         int[][] matrix;
-        for (int i = 0; i < message.length; i += 16) {
+        for (int i = start; i < end; i += 16) {
             matrix = byteArrayToMatrix(message, i);
 
             addRoundKey(matrix, 10);
@@ -315,6 +319,10 @@ public class AES128 {
             matrixToByteArray(matrix, message, i);
         }
         return message;
+    }
+
+    public byte[] decrypt(byte[] message, byte[] key) throws EncryptionException {
+        return decrypt(message, 0, message.length, key);
     }
 
     private void printMatrix(int[][] matrix) {
