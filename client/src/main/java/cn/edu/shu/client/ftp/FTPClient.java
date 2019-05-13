@@ -15,9 +15,9 @@ import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.log.MsgListener;
-import cn.edu.shu.common.util.SecurityUtils;
-import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.CommonUtils;
+import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.SecurityUtils;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -193,7 +193,7 @@ public class FTPClient {
         String line;
         List<FTPFile> files = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
-            if(isSecureMode()) {
+            if (isSecureMode()) {
                 line = decodeMessage(line);
             }
 
@@ -372,7 +372,7 @@ public class FTPClient {
     }
 
     public int decodeBytes(byte[] bytes, int len) {
-        if(controlConnection instanceof SecureControlConnection) {
+        if (controlConnection instanceof SecureControlConnection) {
             SecureControlConnection connection = (SecureControlConnection) controlConnection;
             return securityUtils.decrypt(bytes, len, connection.getServerKey().getBytes());
         }
@@ -380,15 +380,15 @@ public class FTPClient {
     }
 
     public byte[] encodeBytes(byte[] bytes, int len) {
-        if(controlConnection instanceof SecureControlConnection) {
+        if (controlConnection instanceof SecureControlConnection) {
             SecureControlConnection connection = (SecureControlConnection) controlConnection;
             return securityUtils.encrypt(bytes, len, connection.getClientKey().getBytes());
         }
         return bytes;
     }
 
-    public String decodeMessage(String message){
-        if(controlConnection instanceof SecureControlConnection) {
+    private String decodeMessage(String message) {
+        if (controlConnection instanceof SecureControlConnection) {
             SecureControlConnection connection = (SecureControlConnection) controlConnection;
             return securityUtils.decrypt(message, connection.getServerKey());
         }
@@ -427,7 +427,7 @@ public class FTPClient {
         return user;
     }
 
-    public SecurityUtils getSecurityUtils() {
+    SecurityUtils getSecurityUtils() {
         return securityUtils;
     }
 
@@ -435,19 +435,19 @@ public class FTPClient {
         return currentPath;
     }
 
-    public void setPassiveMode(boolean passiveMode) {
-        this.passiveMode = passiveMode;
-    }
-
     public boolean isPassiveMode() {
         return passiveMode;
     }
 
-    public void setSecureMode(boolean secureMode) {
-        this.secureMode = secureMode;
+    public void setPassiveMode(boolean passiveMode) {
+        this.passiveMode = passiveMode;
     }
 
     public boolean isSecureMode() {
         return secureMode;
+    }
+
+    public void setSecureMode(boolean secureMode) {
+        this.secureMode = secureMode;
     }
 }

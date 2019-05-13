@@ -13,8 +13,8 @@ import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.common.bean.DataType;
-import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.CommonUtils;
+import cn.edu.shu.common.util.Constants;
 import org.apache.log4j.Logger;
 
 import javax.swing.filechooser.FileSystemView;
@@ -46,7 +46,7 @@ public class TransferThread extends Thread {
                 if (task == null)
                     continue;
 
-                if(Constants.STATE_PAUSE.equals(task.getState())) {
+                if (Constants.STATE_PAUSE.equals(task.getState())) {
                     queue.remove();
                     queue.offer(task);
                     continue;
@@ -57,7 +57,7 @@ public class TransferThread extends Thread {
                 boolean result = false;
 
                 try {
-                    if(task.isDownload())
+                    if (task.isDownload())
                         result = download(task.getFile(), task.getFtpFile());
                     else
                         result = upload(task.getFile(), task.getFtpFile());
@@ -75,7 +75,7 @@ public class TransferThread extends Thread {
 
     private boolean download(File file, FTPFile ftpFile) throws IOException, ConnectionException, FTPException, NoPermissionException {
         if (!ftpFile.isDirectory()) {
-            if(file.exists() && file.length() == ftpFile.getSize())
+            if (file.exists() && file.length() == ftpFile.getSize())
                 return true;
 
             long offset = file.length();
@@ -93,10 +93,10 @@ public class TransferThread extends Thread {
             long read = offset;
             boolean lastWasCR = false;
             while ((len = in.read(bytes, 0, buffer)) != -1) {
-                if(Constants.STATE_PAUSE.equals(task.getState()))
+                if (Constants.STATE_PAUSE.equals(task.getState()))
                     break;
 
-                if(ftpClient.isSecureMode()) {
+                if (ftpClient.isSecureMode()) {
                     len = ftpClient.decodeBytes(bytes, len);
                 }
 
@@ -133,7 +133,7 @@ public class TransferThread extends Thread {
         ftpFile.setType(fileSystemView.getSystemTypeDescription(file));
         if (file.isFile()) {
             long offset = ftpClient.getFileSize(ftpFile.getPath());
-            if(offset == file.length())
+            if (offset == file.length())
                 return true;
 
             OutputStream outputStream = ftpClient.getAppeStream(ftpFile.getPath());
@@ -142,7 +142,7 @@ public class TransferThread extends Thread {
 
             BufferedOutputStream out = new BufferedOutputStream(outputStream);
             RandomAccessFile raf = new RandomAccessFile(file, "r");
-            if(offset == -1)
+            if (offset == -1)
                 offset = 0;
             raf.seek(offset);
             FileInputStream in = new FileInputStream(raf.getFD());
@@ -151,14 +151,14 @@ public class TransferThread extends Thread {
             long read = offset;
             boolean lastWasCR = false;
             while ((readLen = in.read(bytes, 0, Constants.KB)) != -1) {
-                if(Constants.STATE_PAUSE.equals(task.getState()))
+                if (Constants.STATE_PAUSE.equals(task.getState()))
                     break;
 
-                if(ftpClient.isSecureMode()) {
+                if (ftpClient.isSecureMode()) {
                     bytes = ftpClient.encodeBytes(bytes, readLen);
                     int fill = 16 - (readLen % 16);
                     writeLen = readLen + fill;
-                }else{
+                } else {
                     writeLen = readLen;
                 }
 
@@ -196,15 +196,14 @@ public class TransferThread extends Thread {
 
     private void updateState(boolean result) {
         if (result) {
-            if(task.getSize() == 0){
+            if (task.getSize() == 0) {
                 task.setMaxValue(1);
                 task.setProgress(1);
                 listener.notifyProgress(task);
             }
             task.setState(Constants.STATE_SUCCESS);
-        }
-        else{
-            if(Constants.STATE_PAUSE.equals(task.getState())) {
+        } else {
+            if (Constants.STATE_PAUSE.equals(task.getState())) {
                 queue.offer(task);
                 return;
             }
@@ -213,7 +212,7 @@ public class TransferThread extends Thread {
         listener.afterTransfer(task);
     }
 
-    private void notifyProgress(long progress){
+    private void notifyProgress(long progress) {
         task.setProgress(progress + task.getProgress());
         listener.notifyProgress(task);
     }

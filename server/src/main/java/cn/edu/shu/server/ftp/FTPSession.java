@@ -7,15 +7,13 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
-import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.server.db.UserDao;
-import cn.edu.shu.server.config.SystemConfig;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.net.InetAddress;
-import java.util.Arrays;
 
 public class FTPSession {
     private UserDao userDao;
@@ -84,11 +82,11 @@ public class FTPSession {
         return controlConnection.readRequest();
     }
 
-    public String readLine(){
+    public String readLine() {
         return controlConnection.readLine();
     }
 
-    public void sendLine(String line){
+    public void sendLine(String line) {
         controlConnection.sendLine(line);
     }
 
@@ -186,7 +184,7 @@ public class FTPSession {
         return securityUtils.decrypt(request, clientKey);
     }
 
-    String encodeResponse(String response){
+    String encodeResponse(String response) {
         return securityUtils.encrypt(response, serverKey);
     }
 
@@ -194,7 +192,7 @@ public class FTPSession {
         return securityUtils.decrypt(bytes, len, clientKey.getBytes());
     }
 
-    byte[] encodeBytes(byte[] bytes, int len){
+    byte[] encodeBytes(byte[] bytes, int len) {
         return securityUtils.encrypt(bytes, len, serverKey.getBytes());
     }
 }

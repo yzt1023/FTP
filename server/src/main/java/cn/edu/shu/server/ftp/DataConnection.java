@@ -77,7 +77,7 @@ public class DataConnection {
     public void transferToClient(FTPSession session, List<String> files) throws IOException {
         OutputStream out = dataSocket.getOutputStream();
         OutputStreamWriter writer = new OutputStreamWriter(out, session.getEncoding());
-        for(String file : files) {
+        for (String file : files) {
             if (session.isSecureMode())
                 file = session.encodeResponse(file);
             writer.write(file + Constants.LINE_SEPARATOR);
@@ -94,7 +94,7 @@ public class DataConnection {
 
     private void transfer(FTPSession session, boolean isWrite, InputStream in, OutputStream out) throws IOException {
         int buff = Constants.KB;
-        if(!isWrite)
+        if (!isWrite)
             buff += 16;
 
         byte[] bytes = new byte[Constants.KB + 16];
@@ -103,28 +103,28 @@ public class DataConnection {
         BufferedOutputStream bos = new BufferedOutputStream(out);
         int len;
         while ((len = bis.read(bytes, 0, buff)) != -1) {
-            if(isWrite){
-                if(session.isSecureMode()) {
+            if (isWrite) {
+                if (session.isSecureMode()) {
                     bytes = session.encodeBytes(bytes, len);
                     int fill = 16 - (len % 16);
                     len = len + fill;
                 }
 
-                if(session.getDataType() == DataType.BINARY)
+                if (session.getDataType() == DataType.BINARY)
                     bos.write(bytes, 0, len);
-                else{
+                else {
                     for (int i = 0; i < len; i++) {
                         lastWasCR = utils.toNetWrite(lastWasCR, bos, bytes[i]);
                     }
                 }
-            }else{
-                if(session.isSecureMode()) {
+            } else {
+                if (session.isSecureMode()) {
                     len = session.decodeBytes(bytes, len);
                 }
 
-                if(session.getDataType() == DataType.BINARY || utils.noConversionRequired())
+                if (session.getDataType() == DataType.BINARY || utils.noConversionRequired())
                     bos.write(bytes, 0, len);
-                else{
+                else {
                     for (int i = 0; i < len; i++) {
                         lastWasCR = utils.fromNetWrite(lastWasCR, bos, bytes[i]);
                     }

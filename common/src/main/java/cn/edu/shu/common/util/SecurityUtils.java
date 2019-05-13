@@ -5,10 +5,10 @@
 
 package cn.edu.shu.common.util;
 
-import cn.edu.shu.common.exception.EncryptionException;
 import cn.edu.shu.common.encryption.AES128;
 import cn.edu.shu.common.encryption.Base64;
 import cn.edu.shu.common.encryption.MD5;
+import cn.edu.shu.common.exception.EncryptionException;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -30,6 +30,7 @@ public class SecurityUtils {
 
     /**
      * attention: the len of the return array is end + fillLen;
+     *
      * @param msg array to encrypted
      * @param end the end of array
      * @param key key used to encrypt
@@ -39,7 +40,7 @@ public class SecurityUtils {
         byte[] newArray;
         int fillLen = 16 - (end % 16);
 
-        if(end < msg.length && msg.length % 16 == 0)
+        if (end < msg.length && msg.length % 16 == 0)
             newArray = msg;
         else {
             newArray = new byte[end + fillLen];
@@ -90,24 +91,24 @@ public class SecurityUtils {
         return null;
     }
 
-    public String generateKey(){
+    public String generateKey() {
         Random random = new Random();
         int length = random.nextInt(25) + 8; // length : 5 - 99
         StringBuilder key = new StringBuilder();
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             int temp = random.nextInt(3) % 3;
-            if(temp == 0){
+            if (temp == 0) {
                 key.append((char) (random.nextInt(26) + 65));
-            }else if(temp == 1){
+            } else if (temp == 1) {
                 key.append((char) (random.nextInt(26) + 97));
-            }else{
+            } else {
                 key.append(String.valueOf(random.nextInt(10)));
             }
         }
         return key.toString();
     }
 
-    public MD5 getMd5(){
+    public MD5 getMd5() {
         return this.md5;
     }
 
