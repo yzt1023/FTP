@@ -41,6 +41,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private MenuBar menuBar;
     private FTPClient ftpClient;
     private Deque<Task> taskQueue;
+    private TransferThread transferThread;
     private CommonUtils utils;
     private TransferUtils transferUtils;
     private Logger logger = Logger.getLogger(getClass());
@@ -57,8 +58,6 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         config.initConfig();
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
         this.setIconImage(icon);
-
-        taskQueue = new LinkedList<>();
 
         initComponents();
         setGroupLayout();
@@ -78,8 +77,9 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         tabbedPane.addTab("transfer process", taskPane);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        ftpClient = new FTPClient(this, config);
-//        ftpClient.setEncoding("GBK");
+        ftpClient = new FTPClient(this);
+        taskQueue = new LinkedList<>();
+        transferThread = new TransferThread(taskQueue, ftpClient, this);
 
         // category panel
         localCategoryPane = new LocalCategoryPane(this);
@@ -206,7 +206,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         try {
             ftpClient.disconnect();
         } catch (ConnectionException | IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -215,8 +215,8 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         localCategoryPane.afterConnect(ftpClient.getUser().isReadable());
         remoteCategoryPane.afterConnect();
         menuBar.afterConnect();
-        TransferThread downloadThread = new TransferThread(taskQueue, ftpClient, this);
-        downloadThread.start();
+        if(!transferThread.isAlive())
+            transferThread.start();
     }
 
     @Override
@@ -240,6 +240,25 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         logger.info(message);
     }
 
+    boolean exit(){
+        if(!taskQueue.isEmpty()){
+            int i = MessageUtils.showConfirmMessage("There are outstanding tasks, are you sure to stop them!", "close confirm");
+            if(i != 0)
+                return false;
+        }
+
+        transferThread.close();
+        try {
+            // wait sub thread to close
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        this.startDisconnect();
+        return true;
+    }
+
     FTPClient getFtpClient() {
         return ftpClient;
     }
@@ -248,4 +267,3 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         return config;
     }
 }
-// TODO: 3/2/2019 change layout by mouse drag

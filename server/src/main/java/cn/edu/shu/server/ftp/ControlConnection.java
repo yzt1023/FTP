@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ControlConnection implements Runnable, MsgListener {
 
@@ -32,10 +33,10 @@ public class ControlConnection implements Runnable, MsgListener {
     private boolean closed;
     private SystemConfig config;
 
-    ControlConnection(Socket controlSocket) {
+    ControlConnection(Socket controlSocket, SystemConfig config) {
         this.controlSocket = controlSocket;
         logger = Logger.getLogger(getClass());
-        config = SystemConfig.getInstance();
+        this.config = config;
         encoding = config.getEncoding();
         session = new FTPSession(this);
         closed = false;
@@ -57,7 +58,7 @@ public class ControlConnection implements Runnable, MsgListener {
                     println(FTPReplyCode.NOT_IMPLEMENTED.getReply());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         } finally {
             closeSocket();
         }
@@ -87,8 +88,12 @@ public class ControlConnection implements Runnable, MsgListener {
     String readRequest() {
         try {
             request = controlReader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (SocketTimeoutException e){
+            log("Disconnected");
+            closed = true;
+            return null;
+        } catch(IOException e) {
+            logger.error(e.getMessage(), e);
             return null;
         }
 
@@ -110,7 +115,7 @@ public class ControlConnection implements Runnable, MsgListener {
         try {
             return controlReader.readLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -138,12 +143,7 @@ public class ControlConnection implements Runnable, MsgListener {
     }
 
     void shutdown() {
-//        try {
-//            controlSocket.shutdownInput();
-//            controlSocket.shutdownOutput();
-//        } catch (IOException e) {
-//            logger.error(e.getMessage(), e);
-//        }
+        closed = true;
     }
 
     InetAddress getAddress() {

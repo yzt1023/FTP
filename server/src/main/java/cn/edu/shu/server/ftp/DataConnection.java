@@ -8,6 +8,7 @@ package cn.edu.shu.server.ftp;
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
+import cn.edu.shu.server.config.SystemConfig;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -35,13 +36,15 @@ public class DataConnection {
     public InetSocketAddress initPassiveDataConnection(InetAddress inetAddress) {
         closeConnection();
         passiveMode = true;
+        SystemConfig config = SystemConfig.getInstance();
+        int port = utils.producePort(config.getPassiveMinPort(), config.getPassiveMaxPort());
         try {
-            serverSocket = new ServerSocket(0, 1, inetAddress);
+            serverSocket = new ServerSocket(port, 1, inetAddress);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             closeConnection();
-            return null;
         }
+
         socketAddress = new InetSocketAddress(inetAddress, serverSocket.getLocalPort());
         return socketAddress;
     }
@@ -51,6 +54,7 @@ public class DataConnection {
             dataSocket = serverSocket.accept();
         } else {
             dataSocket = new Socket();
+            dataSocket.bind(new InetSocketAddress(Constants.DEFAULT_DATA_PORT));
             dataSocket.connect(socketAddress);
         }
     }

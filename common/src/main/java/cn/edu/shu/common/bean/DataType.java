@@ -23,7 +23,7 @@ public enum DataType {
     }
 
     @Override
-    public String toString(){
-        return this == BINARY ? "I" : "A";
+    public String toString() {
+        return this == ASCII ? "A" : "I";
     }
 }

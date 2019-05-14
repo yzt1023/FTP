@@ -18,8 +18,6 @@ class MenuBar extends JMenuBar {
     private JMenu menuFile;
     private JMenu menuEdit;
     private JMenu menuHelp;
-    private JMenuItem connectItem;
-    private JMenuItem disconnectItem;
     private JMenuItem exitItem;
     private JMenuItem settingItem;
     private JMenuItem userItem;
@@ -36,12 +34,6 @@ class MenuBar extends JMenuBar {
     private void initComponents() {
         menuFile = new JMenu("File");
         menuFile.setMnemonic('f');
-        connectItem = new JMenuItem("Connect to server");
-        connectItem.setMnemonic('c');
-        menuFile.add(connectItem);
-        disconnectItem = new JMenuItem("Disconnect");
-        disconnectItem.setMnemonic('d');
-        menuFile.add(disconnectItem);
         exitItem = new JMenuItem("Exit", new ImageIcon(utils.getResourcePath(getClass(), "exit.png")));
         exitItem.setMnemonic('x');
         menuFile.add(exitItem);
@@ -64,20 +56,6 @@ class MenuBar extends JMenuBar {
         menuHelp.add(aboutItem);
         this.add(menuHelp);
 
-        connectItem.setEnabled(false);
-
-        connectItem.addActionListener(e -> {
-            frame.getFtpServer().resumeServer();
-            connectItem.setEnabled(false);
-            disconnectItem.setEnabled(true);
-        });
-
-        disconnectItem.addActionListener(e -> {
-            frame.getFtpServer().suspendServer();
-            connectItem.setEnabled(true);
-            disconnectItem.setEnabled(false);
-        });
-
         exitItem.addActionListener(e -> {
             int i = MessageUtils.showConfirmMessage(Constants.CONFIRM_TO_EXIT,
                     "confirm dialog");
@@ -88,6 +66,11 @@ class MenuBar extends JMenuBar {
         userItem.addActionListener(e -> {
             UserDialog userDialog = new UserDialog(frame);
             userDialog.setVisible(true);
+        });
+
+        settingItem.addActionListener(e -> {
+            SettingsDialog settingsDialog = new SettingsDialog(frame);
+            settingsDialog.setVisible(true);
         });
 
         aboutItem.addActionListener(e -> {

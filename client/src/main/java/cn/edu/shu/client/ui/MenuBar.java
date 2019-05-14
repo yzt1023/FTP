@@ -5,9 +5,9 @@
 
 package cn.edu.shu.client.ui;
 
+import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
-import cn.edu.shu.common.util.CommonUtils;
 
 import javax.swing.*;
 import java.util.Calendar;
@@ -20,6 +20,7 @@ public class MenuBar extends JMenuBar {
     private JMenuItem exitItem;
     private JCheckBoxMenuItem passiveModeItem;
     private JCheckBoxMenuItem secureModeItem;
+    private JMenuItem settingsItem;
     private JMenuItem aboutItem;
     private JMenuItem registerItem;
     private MainFrame frame;
@@ -29,6 +30,7 @@ public class MenuBar extends JMenuBar {
         super();
         this.frame = frame;
         initComponents();
+        addActions();
     }
 
     private void initComponents() {
@@ -41,8 +43,8 @@ public class MenuBar extends JMenuBar {
         this.add(menuFile);
 
         // mode
-        menuMode = new JMenu("Mode");
-        menuMode.setMnemonic('m');
+        menuMode = new JMenu("Edit");
+        menuMode.setMnemonic('e');
 
         passiveModeItem = new JCheckBoxMenuItem("Passive Mode");
         passiveModeItem.setSelected(frame.getConfig().isDefaultPassive());
@@ -53,6 +55,12 @@ public class MenuBar extends JMenuBar {
         secureModeItem.setSelected(frame.getConfig().isDefaultPassive());
         secureModeItem.setMnemonic('s');
         menuMode.add(secureModeItem);
+        JSeparator separator = new JSeparator();
+        menuMode.add(separator);
+
+        settingsItem = new JMenuItem("Settings...");
+        settingsItem.setMnemonic('t');
+        menuMode.add(settingsItem);
         this.add(menuMode);
 
         // help
@@ -66,17 +74,25 @@ public class MenuBar extends JMenuBar {
         registerItem.setMnemonic('r');
         menuHelp.add(registerItem);
         this.add(menuHelp);
+    }
 
+    private void addActions() {
         // action
         passiveModeItem.addChangeListener(e -> frame.firePasvModeChanged(passiveModeItem.isSelected()));
 
         secureModeItem.addChangeListener(e -> frame.fireSecureModeChanged(secureModeItem.isSelected()));
 
+        settingsItem.addActionListener(e -> {
+            SettingsDialog dialog = new SettingsDialog(frame);
+            dialog.setVisible(true);
+        });
+
         exitItem.addActionListener(e -> {
             int i = MessageUtils.showConfirmMessage(Constants.CONFIRM_TO_EXIT,
                     "confirm dialog");
-            if (i == 0)
+            if (i == 0 && frame.exit()) {
                 System.exit(0);
+            }
         });
 
         aboutItem.addActionListener(e -> {
@@ -106,7 +122,7 @@ public class MenuBar extends JMenuBar {
         secureModeItem.setEnabled(false);
     }
 
-    void afterDisconnect(){
+    void afterDisconnect() {
         registerItem.setEnabled(true);
         secureModeItem.setEnabled(true);
     }

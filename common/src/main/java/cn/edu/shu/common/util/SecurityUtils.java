@@ -9,6 +9,7 @@ import cn.edu.shu.common.encryption.AES128;
 import cn.edu.shu.common.encryption.Base64;
 import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.exception.EncryptionException;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -16,6 +17,7 @@ import java.util.Random;
 public class SecurityUtils {
 
     private static SecurityUtils instance = new SecurityUtils();
+    private Logger logger = Logger.getLogger(getClass());
     private AES128 aes128;
     private MD5 md5;
 
@@ -53,7 +55,7 @@ public class SecurityUtils {
         try {
             aes128.encrypt(newArray, 0, end + fillLen, key);
         } catch (EncryptionException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         return newArray;
     }
@@ -64,7 +66,7 @@ public class SecurityUtils {
         try {
             return Base64.encode(bytes);
         } catch (EncryptionException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -74,7 +76,7 @@ public class SecurityUtils {
             key = md5.get16Md5(key).getBytes();
             aes128.decrypt(msg, 0, end, key);
         } catch (EncryptionException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         int len = msg[end - 1];
         return end - len;
@@ -86,7 +88,7 @@ public class SecurityUtils {
             int len = decrypt(bytes, bytes.length, key.getBytes());
             return new String(Arrays.copyOfRange(bytes, 0, len));
         } catch (EncryptionException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         return null;
     }

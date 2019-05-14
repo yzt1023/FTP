@@ -21,22 +21,20 @@ public class FTPServer extends Thread {
     //    private Thread server;
     private MsgListener listener;
     private Logger logger;
-    private List<FTPSession> sessions;
-    private boolean suspend;
     private boolean stop;
+    private SystemConfig config;
 
     public FTPServer() {
-        SystemConfig.getInstance().initConfig();
+        config = SystemConfig.getInstance();
+        config.initConfig();
         logger = Logger.getLogger(getClass());
-        sessions = new ArrayList<>();
         int corePoolSize = Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(corePoolSize, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         try {
-            serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
+            serverSocket = new ServerSocket(Constants.DEFAULT_CONTROL_PORT);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
-        suspend = false;
         stop = false;
     }
 
@@ -55,14 +53,16 @@ public class FTPServer extends Thread {
 
     private void listen() {
         try {
-            while (!suspend) {
-                serverSocket.setSoTimeout(1000);
+            while (!stop) {
                 Socket socket = serverSocket.accept();
+                socket.setSoTimeout(1000);
                 listener.println("Connected, sending welcome message...");
                 socket.setTcpNoDelay(true);  // close the buffer of socket to ensure transfer speed
-                ControlConnection controlConnection = new ControlConnection(socket);
+                int timeout = config.getTimeout();
+                socket.setSoTimeout(timeout * 1000);
+
+                ControlConnection controlConnection = new ControlConnection(socket, config);
                 controlConnection.setListener(listener);
-                sessions.add(controlConnection.getSession());
                 executor.execute(controlConnection);
             }
         } catch (SocketTimeoutException ignored) {
@@ -72,34 +72,10 @@ public class FTPServer extends Thread {
         }
     }
 
-    public boolean isSuspend() {
-        return suspend;
-    }
-
-    public void suspendServer() {
-        suspend = true;
-        for (FTPSession session : sessions) {
-            if (session != null)
-                session.close();
-        }
-        listener.println("Connection to server closed");
-    }
-
-    public void resumeServer() {
-        suspend = false;
-    }
-
     public void stopServer() {
-        suspend = true;
         stop = true;
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         closeSocket();
         executor.shutdownNow();
-        this.interrupt();
     }
 
     public boolean isStop() {
@@ -116,31 +92,8 @@ public class FTPServer extends Thread {
                 serverSocket.close();
                 serverSocket = null;
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-/*
-    class ListenThread extends Thread{
-        @Override
-        public void run() {
-            try {
-                listener.println("Waiting for connect...");
-                while (listening) {
-                    serverSocket.setSoTimeout(5000);
-                    Socket socket = serverSocket.accept();
-                    listener.println("Connected, sending welcome message...");
-                    socket.setTcpNoDelay(true);  // close the buffer of socket to ensure transfer speed
-                    ControlConnection controlConnection = new ControlConnection(socket);
-                    controlConnection.setListener(listener);
-                    sessions.add(controlConnection.getSession());
-                    executor.execute(controlConnection);
-                }
-            } catch (SocketTimeoutException ignored){
-            } catch (IOException e) {
                 logger.error(e.getMessage(), e);
             }
         }
     }
-    // TODO: 4/14/2019 thread pool studying*/
 }

@@ -366,7 +366,6 @@ public class RemoteCategoryPane extends CategoryPane {
         } catch (Exception ex) {
             logger.error(e.getMessage(), e);
             MessageUtils.showInfoMessage(e.getMessage());
-//            afterDisconnect();
             return;
         }
         MessageUtils.showInfoMessage(Constants.RECONNECT_SUCCEED);

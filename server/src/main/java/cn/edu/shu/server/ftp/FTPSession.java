@@ -91,6 +91,8 @@ public class FTPSession {
     }
 
     public void close() {
+        clientKey = null;
+        serverKey = null;
         controlConnection.shutdown();
     }
 
@@ -158,14 +160,6 @@ public class FTPSession {
 
     public String getServerKey() {
         return serverKey;
-    }
-
-    public void setServerKey(String serverKey) {
-        this.serverKey = serverKey;
-    }
-
-    public String getClientKey() {
-        return clientKey;
     }
 
     public void setClientKey(String clientKey) {

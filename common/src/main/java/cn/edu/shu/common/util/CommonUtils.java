@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 public class CommonUtils {
@@ -51,19 +52,15 @@ public class CommonUtils {
         UIManager.put("MenuBar.font", font);
         UIManager.put("Menu.font", font);
         UIManager.put("TextField.font", font);
+        UIManager.put("RadioButton.font", font);
+
         UIManager.put("TextArea.font", new Font("SimSun", Font.PLAIN, 18));
         UIManager.put("PasswordField.font", font);
         UIManager.put("CheckBox.font", font);
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-            /*for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }*/
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -191,4 +188,11 @@ public class CommonUtils {
         return icon;
     }
 
+
+    public int producePort(int minPort, int maxPort) {
+        maxPort++;
+        int randomMax = maxPort - minPort;
+        Random random = new Random();
+        return random.nextInt(randomMax) + minPort;
+    }
 }

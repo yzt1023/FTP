@@ -1,12 +1,19 @@
-package cn.edu.shu.server.db;
+/*
+ * Written By : Skye You
+ * Copyright (c) 2018 - 2019. All Rights Reserved.
+ */
+
+package cn.edu.shu.server.config;
 
 import cn.edu.shu.common.util.CommonUtils;
+import cn.edu.shu.server.db.DBConnPool;
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
 
 public class DBConfig {
     private static DBConfig instance = new DBConfig();
+    private Logger logger = Logger.getLogger(getClass());
     private String driver;
     private String url;
     private String username;
@@ -21,9 +28,8 @@ public class DBConfig {
             username = properties.getProperty("username");
             password = properties.getProperty("password");
         }catch (Exception e){
-            Logger logger = Logger.getLogger(DBConfig.class);
-            logger.error(e.getMessage());
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
+
         }
     }
 

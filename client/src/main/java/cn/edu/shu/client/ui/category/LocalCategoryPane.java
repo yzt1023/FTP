@@ -9,6 +9,7 @@ import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.util.TreeUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
+import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -28,6 +29,8 @@ public class LocalCategoryPane extends CategoryPane {
     private JMenuItem uploadItem;
     private TransferListener listener;
     private boolean canUpload;
+    private Logger logger = Logger.getLogger(getClass());
+
 
     public LocalCategoryPane(TransferListener listener) {
         super();
@@ -175,7 +178,7 @@ public class LocalCategoryPane extends CategoryPane {
         try {
             desktop.open(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             MessageUtils.showErrorMessage(Constants.FILE_OPEN_FAILED, Constants.OPEN_FILE_TITLE);
         }
     }

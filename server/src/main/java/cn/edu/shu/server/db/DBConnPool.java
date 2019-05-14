@@ -1,5 +1,6 @@
 package cn.edu.shu.server.db;
 
+import cn.edu.shu.server.config.DBConfig;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -45,7 +46,6 @@ public class DBConnPool {
             return DriverManager.getConnection(config.getUrl(), config.getUsername(), config.getPassword());
         }catch (Exception e){
             logger.error(e.getMessage(), e);
-            e.printStackTrace();
         }
         return null;
     }
@@ -64,7 +64,6 @@ public class DBConnPool {
             conn.close();
         }catch (SQLException e){
             logger.error(e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 }

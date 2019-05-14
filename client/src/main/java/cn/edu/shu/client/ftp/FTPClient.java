@@ -45,10 +45,12 @@ public class FTPClient {
 
     private String response;
     private MsgListener msgListener;
+    private SystemConfig config;
 
-    public FTPClient(MsgListener msgListener, SystemConfig config) {
+    public FTPClient(MsgListener msgListener) {
+        this.config = SystemConfig.getInstance();
+
         this.msgListener = msgListener;
-        this.dataType = DataType.BINARY;
         this.restartOffset = 0L;
         this.encoding = config.getEncoding();
         this.passiveMode = config.isDefaultPassive();
@@ -73,7 +75,12 @@ public class FTPClient {
         this.port = port;
     }
 
-    public synchronized void login(String username, String password) throws ConnectionException, FTPException {
+    public synchronized  void login(String username, String password) throws ConnectionException, FTPException {
+        password = md5.getMD5(password);
+        reLogin(username, password);
+    }
+
+    private synchronized void reLogin(String username, String password) throws ConnectionException, FTPException {
         if (controlConnection == null)
             return;
 
@@ -81,7 +88,6 @@ public class FTPClient {
         if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
             throw new FTPException(response);
 
-        password = md5.getMD5(password);
         executeCommand(FTPCommand.PASS + " " + password);
         if (!FTPReplyCode.find(getReplyCode()).isOkay())
             throw new FTPException(response);
@@ -107,8 +113,20 @@ public class FTPClient {
     }
 
     private synchronized void executeCommand(String command) throws ConnectionException {
+        sendCommand(command);
+        readReply();
+    }
+
+    public synchronized void readReply() throws ConnectionException {
+        response = controlConnection.readReply();
+    }
+
+    private synchronized void sendCommand(String command) throws ConnectionException {
+        if (controlConnection == null)
+            return;
+
         try {
-            response = controlConnection.executeCommand(command);
+            controlConnection.sendCommand(command);
         } catch (ConnectionException e) {
             try {
                 controlConnection.close();
@@ -119,15 +137,10 @@ public class FTPClient {
         }
     }
 
-    public synchronized void readReply() throws ConnectionException {
-        response = controlConnection.readReply();
-    }
-
-    private synchronized void sendCommand(String command) throws ConnectionException {
-        controlConnection.sendCommand(command);
-    }
-
     public void disconnect() throws ConnectionException, IOException {
+        if (controlConnection == null)
+            return;
+
         executeCommand(FTPCommand.QUIT);
         controlConnection.close();
     }
@@ -157,7 +170,8 @@ public class FTPClient {
             throws ConnectionException, IOException, FTPException {
         // produce a random port number
         InetAddress localAddress = controlConnection.getLocalAddress();
-        ServerSocket serverSocket = new ServerSocket(0, 1, localAddress);
+        int port = utils.producePort(config.getActiveMinPort(), config.getActiveMaxPort());
+        ServerSocket serverSocket = new ServerSocket(port, 1, localAddress);
 
         InetSocketAddress socketAddress = new InetSocketAddress(localAddress, serverSocket.getLocalPort());
         String str = utils.getStringByAddress(socketAddress);
@@ -352,7 +366,7 @@ public class FTPClient {
         msgListener.println("Trying to reconnect to server");
         connect(host, port);
         if (user != null)
-            login(user.getUsername(), user.getPassword());
+            reLogin(user.getUsername(), user.getPassword());
     }
 
     public synchronized void noop() throws ConnectionException {
@@ -449,5 +463,9 @@ public class FTPClient {
 
     public void setSecureMode(boolean secureMode) {
         this.secureMode = secureMode;
+    }
+
+    public SystemConfig getConfig() {
+        return config;
     }
 }

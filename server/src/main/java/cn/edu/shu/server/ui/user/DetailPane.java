@@ -58,8 +58,12 @@ public class DetailPane extends JPanel {
                 success = listener.newUserToDB(user);
             else
                 success = listener.updateUser(user);
+
             if(success)
-                MessageUtils.showInfoMessage("Save successfully!");
+                MessageUtils.showInfoMessage(Constants.SAVE_SUCCEED);
+            else
+                MessageUtils.showInfoMessage(Constants.SAVE_FAILED);
+
         });
 
         cbValid.addChangeListener(e -> {

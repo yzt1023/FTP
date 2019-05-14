@@ -20,8 +20,8 @@ public class QUIT implements Command {
         if (request.hasArgument())
             session.println(FTPReplyCode.INVALID_PARAMETER.getReply());
         else {
-            session.close();
             session.println(FTPReplyCode.COMMAND_OK + " Goodbye");
+            session.close();
         }
     }
 }

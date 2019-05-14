@@ -10,8 +10,8 @@ import java.awt.event.KeyEvent;
 
 class ConnectPane extends JPanel {
 
-    private static final String CONNECT = "connect";
-    private static final String DISCONNECT = "disconnect";
+    private static final String CONNECT = "Connect";
+    private static final String DISCONNECT = "Disconnect";
     private JLabel lblUsername;
     private JTextField txtUsername;
     private JLabel lblPwd;
@@ -42,7 +42,7 @@ class ConnectPane extends JPanel {
         txtHost = new JTextField();
         lblPort = new JLabel("Port: ");
         txtPort = new JTextField();
-        txtPort.setText(String.valueOf(Constants.DEFAULT_PORT));
+        txtPort.setText(String.valueOf(Constants.DEFAULT_CONTROL_PORT));
         cbAnonymous = new JCheckBox("Anonymous");
         btnConnect = new JButton(CONNECT);
 
@@ -59,14 +59,14 @@ class ConnectPane extends JPanel {
             if (cbAnonymous.isSelected()) {
                 txtUsername.setEnabled(false);
                 txtPwd.setEnabled(false);
-            } else {
+            } else if(!isConnected()) {
                 txtUsername.setEnabled(true);
                 txtPwd.setEnabled(true);
             }
         });
 
         btnConnect.addActionListener(e -> {
-            if ("connect".equals(btnConnect.getText()))
+            if (CONNECT.equals(btnConnect.getText()))
                 connect();
             else {
                 listener.startDisconnect();
@@ -80,7 +80,7 @@ class ConnectPane extends JPanel {
         String host = txtHost.getText();
         String port = txtPort.getText();
         boolean anonymous = cbAnonymous.isSelected();
-        int portNum = Constants.DEFAULT_PORT;
+        int portNum = Constants.DEFAULT_CONTROL_PORT;
         String username = txtUsername.getText();
         char[] password = txtPwd.getPassword();
         if (host.isEmpty()) {
@@ -195,6 +195,10 @@ class ConnectPane extends JPanel {
         txtPwd.setEnabled(enabled);
         lblPwd.setEnabled(enabled);
         cbAnonymous.setEnabled(enabled);
+    }
+
+    private boolean isConnected(){
+        return DISCONNECT.equals(btnConnect.getText());
     }
 
 }

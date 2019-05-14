@@ -1,11 +1,30 @@
-<!--
-  ~ Written By : Skye You
-  ~ Copyright (c) 2018 - 2019. All Rights Reserved.
--->
+<?xml version="1.0" encoding="utf-8"?>
 
-<ClientConfig>
+<root>
+  <default>
+    <passive>true</passive>
+    <secure>true</secure>
+  </default>
+  <settings>
     <encoding>UTF-8</encoding>
-    <defaultPassive>true</defaultPassive>
-    <defaultSecure>true</defaultSecure>
-    <socketTimeout>0</socketTimeout>
-</ClientConfig>
+    <activeMinPort>40000</activeMinPort>
+    <activeMaxPort>65535</activeMaxPort>
+    <transferMode>BINARY</transferMode>
+    <defaultAscii>
+      <dataType>bat</dataType>
+      <dataType>c</dataType>
+      <dataType>conf</dataType>
+      <dataType>cpp</dataType>
+      <dataType>css</dataType>
+      <dataType>h</dataType>
+      <dataType>html</dataType>
+      <dataType>java</dataType>
+      <dataType>jsp</dataType>
+      <dataType>php</dataType>
+      <dataType>py</dataType>
+      <dataType>sql</dataType>
+      <dataType>txt</dataType>
+      <dataType>xml</dataType>
+    </defaultAscii>
+  </settings>
+</root>

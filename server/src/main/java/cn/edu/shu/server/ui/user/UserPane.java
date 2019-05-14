@@ -6,6 +6,7 @@
 package cn.edu.shu.server.ui.user;
 
 import cn.edu.shu.common.bean.User;
+import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
 
 import javax.swing.*;
@@ -53,12 +54,14 @@ class UserPane extends JPanel {
         btnRemove.addActionListener(e -> {
             int index = userList.getSelectedIndex();
             if(index == -1)
-                MessageUtils.showInfoMessage("No user is selected!");
+                MessageUtils.showInfoMessage(Constants.NO_ITEM_SELECTED);
             else{
                 User user = userListModel.getUser(index);
                 if(listener.RemoveUserFromDB(user)) {
                     userListModel.removeRow(index);
-                    MessageUtils.showInfoMessage("Remove successfully!");
+                    MessageUtils.showInfoMessage(Constants.REMOVE_SUCCEED);
+                }else{
+                    MessageUtils.showInfoMessage(Constants.REMOVE_FAILED);
                 }
             }
         });

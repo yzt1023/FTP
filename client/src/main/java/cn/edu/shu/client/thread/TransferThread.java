@@ -5,6 +5,7 @@
 
 package cn.edu.shu.client.thread;
 
+import cn.edu.shu.client.config.SystemConfig;
 import cn.edu.shu.client.exception.ConnectionException;
 import cn.edu.shu.client.exception.FTPException;
 import cn.edu.shu.client.exception.NoPermissionException;
@@ -30,16 +31,19 @@ public class TransferThread extends Thread {
     private CommonUtils utils = CommonUtils.getInstance();
     private Logger logger = Logger.getLogger(getClass());
     private Task task;
+    private SystemConfig config;
+    private boolean stop;
 
     public TransferThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener) {
         this.queue = queue;
         this.ftpClient = ftpClient;
         this.listener = listener;
+        this.config = ftpClient.getConfig();
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (!stop) {
             try {
                 Thread.sleep(1000);
                 task = queue.peek();
@@ -80,6 +84,7 @@ public class TransferThread extends Thread {
 
             long offset = file.length();
             ftpClient.setRestartOffset(offset);
+            ftpClient.setDataType(config.getFileDataType(ftpFile.getName()));
             InputStream inputStream = ftpClient.getRetrStream(ftpFile.getPath());
             if (inputStream == null)
                 return false;
@@ -93,7 +98,7 @@ public class TransferThread extends Thread {
             long read = offset;
             boolean lastWasCR = false;
             while ((len = in.read(bytes, 0, buffer)) != -1) {
-                if (Constants.STATE_PAUSE.equals(task.getState()))
+                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
                     break;
 
                 if (ftpClient.isSecureMode()) {
@@ -136,6 +141,7 @@ public class TransferThread extends Thread {
             if (offset == file.length())
                 return true;
 
+            ftpClient.setDataType(config.getFileDataType(file.getName()));
             OutputStream outputStream = ftpClient.getAppeStream(ftpFile.getPath());
             if (outputStream == null)
                 return false;
@@ -151,7 +157,7 @@ public class TransferThread extends Thread {
             long read = offset;
             boolean lastWasCR = false;
             while ((readLen = in.read(bytes, 0, Constants.KB)) != -1) {
-                if (Constants.STATE_PAUSE.equals(task.getState()))
+                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
                     break;
 
                 if (ftpClient.isSecureMode()) {
@@ -215,5 +221,9 @@ public class TransferThread extends Thread {
     private void notifyProgress(long progress) {
         task.setProgress(progress + task.getProgress());
         listener.notifyProgress(task);
+    }
+
+    public void close() {
+        stop = true;
     }
 }

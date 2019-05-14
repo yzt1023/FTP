@@ -9,6 +9,8 @@ public class ShellApplication {
     public static void main(String[] args) {
 
         CommonUtils.getInstance().setLookAndFeel();
+        String dir = System.getProperty("user.dir");
+        System.setProperty("project", dir);
 
         // display cn.edu.shu.ui
         SwingUtilities.invokeLater(() -> {

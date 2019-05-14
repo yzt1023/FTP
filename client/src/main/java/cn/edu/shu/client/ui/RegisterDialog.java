@@ -84,7 +84,7 @@ class RegisterDialog extends JDialog {
         btnSubmit.addActionListener(e -> {
             String host = txtHost.getText();
             String port = txtPort.getText();
-            int portNum = Constants.DEFAULT_PORT;
+            int portNum = Constants.DEFAULT_CONTROL_PORT;
             String user = txtUsername.getText();
             char[] pwd = txtPassword.getPassword();
             char[] confirmPwd = txtConfirmPwd.getPassword();

@@ -105,7 +105,7 @@ public class TaskTableModel extends AbstractTableModel {
     void clearTasks() {
         for (Task task : tasks)
             if (!Constants.STATE_FAILURE.equals(task.getState()) && !Constants.STATE_SUCCESS.equals(task.getState())) {
-                MessageUtils.showErrorMessage("Tasks cannot be emptied because there are some outstanding tasks", "clear task");
+                MessageUtils.showErrorMessage(Constants.CLEAR_FAILED, "clear task");
                 return;
             }
 

@@ -11,9 +11,8 @@ public interface Constants {
     byte[] EOL = LINE_SEPARATOR.getBytes();
     String NET_EOL = "\r\n";
     String ANONYMOUS_USER = "anonymous";
-    int DEFAULT_PORT = 2121;
-    String DEFAULT_IP = "127.0.0.1";
-    int TIME_OUT = 500;
+    int DEFAULT_CONTROL_PORT = 2121;
+    int DEFAULT_DATA_PORT = 2020;
     String DATE_PATTERN = "yyyyMMddHHmm";
     String KEY_MODIFY = "modify=";
     String KEY_SIZE = "size=";
@@ -21,9 +20,6 @@ public interface Constants {
     String FILE_FOLDER = "File folder";
     String SYSTEM_FOLDER = "System Folder";
     String TYPE_DIR = "dir";
-    String TYPE_CDIR = "cdir";
-    String TYPE_PDIR = "pdir";
-    String TYPE_FILE = "file";
     String SEPARATOR = "/";
     int KB = 1024;
     // file operation
@@ -50,20 +46,34 @@ public interface Constants {
     String CONNECT_FAILED = "Unable to connect to the specified server!";
     String CONNECT_FIRST = "Please connect first!";
     String REGISTER_SUCCEED = "Register successfully!";
-    String RECONNECT_SUCCEED = "Reconnect succeed!";
-
-
+    String RECONNECT_SUCCEED = "Connection timed out and reconnect succeed!";
     String SEND_COMMAND_ERROR = "Send command error!";
-    String RESPONSE_ERROR = "Read response failed!";
+
     // user
     String EMPTY_PASSWORD = "Password cannot be empty!";
     String USER_EXISTS = "Username has been registered! Please use another username!";
     String PASSWORD_DIFFERENT = "The two passwords entered are different!";
     String PERMISSION_DENIED = "Permission denied!";
+
     // transfer task state
     String STATE_WAITING = "WAITING";
     String STATE_PROCESSING = "PROCESSING";
     String STATE_PAUSE = "PAUSE";
     String STATE_FAILURE = "FAILURE";
     String STATE_SUCCESS = "SUCCESS";
+    // transfer task
+    String CLEAR_FAILED = "Tasks cannot be emptied because there are some outstanding tasks!";
+    // settings
+    String EMPTY_INPUT = "Parameters cannot be empty! Please check your input!";
+    String CHARSET_NOT_EXISTS = "The charset inputted is not exists or not supported!";
+    String NUMBER_INCORRECT = "The number format is incorrect!";
+    String PORT_INCORRECT = "Incorrect port range!";
+    String TIME_INCORRECT = "Incorrect timeout!";
+    String SAVE_SUCCEED = "Save successfully!";
+    String SAVE_FAILED = "Failed to save!";
+    String NO_ITEM_SELECTED = "No item is selected!";
+    String REMOVE_SUCCEED = "Remove successfully!";
+    String REMOVE_FAILED = "Failed to remove!";
+    String ADD_SUCCEED = "Add successfully!";
+    String ADD_FAILED = "File type existed!";
 }
