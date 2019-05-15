@@ -401,7 +401,15 @@ public class FTPClient {
         return bytes;
     }
 
-    private String decodeMessage(String message) {
+    public String encodeMessage(String message) {
+        if (controlConnection instanceof SecureControlConnection) {
+            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+            return securityUtils.encrypt(message, connection.getClientKey());
+        }
+        return message;
+    }
+
+    public String decodeMessage(String message) {
         if (controlConnection instanceof SecureControlConnection) {
             SecureControlConnection connection = (SecureControlConnection) controlConnection;
             return securityUtils.decrypt(message, connection.getServerKey());

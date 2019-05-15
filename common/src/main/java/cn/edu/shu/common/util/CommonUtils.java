@@ -130,48 +130,6 @@ public class CommonUtils {
         }
     }
 
-    public boolean noConversionRequired() {
-        return Constants.LINE_SEPARATOR.equals(Constants.NET_EOL);
-    }
-
-    public boolean fromNetWrite(boolean lastWasCR, OutputStream out, byte b) throws IOException {
-        switch (b) {
-            case '\n':
-                if (lastWasCR)
-                    out.write(Constants.EOL);
-                else
-                    out.write(b);
-                lastWasCR = false;
-                break;
-            case '\r':
-                lastWasCR = true;
-                break;
-            default:
-                if (lastWasCR) {
-                    out.write('\r');
-                    lastWasCR = false;
-                }
-                out.write(b);
-        }
-        return lastWasCR;
-    }
-
-    public boolean toNetWrite(boolean lastWasCR, OutputStream out, byte b) throws IOException {
-        switch (b) {
-            case '\r':
-                lastWasCR = true;
-                out.write('\r');
-                break;
-            case '\n':
-                if (!lastWasCR)
-                    out.write('\r');
-            default:
-                lastWasCR = false;
-                out.write(b);
-        }
-        return lastWasCR;
-    }
-
     public Icon getIcon(String fileName, boolean isDirectory) {
         Icon icon;
         if (isDirectory)

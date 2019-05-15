@@ -21,6 +21,7 @@ import cn.edu.shu.common.util.MessageUtils;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private CommonUtils utils;
     private TransferUtils transferUtils;
     private Logger logger = Logger.getLogger(getClass());
+    private FileSystemView fileSystemView;
     private SystemConfig config;
 
     public MainFrame() {
@@ -54,6 +56,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
         utils = CommonUtils.getInstance();
         transferUtils = TransferUtils.getInstance();
+        fileSystemView = FileSystemView.getFileSystemView();
         config = SystemConfig.getInstance();
         config.initConfig();
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
@@ -82,7 +85,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         transferThread = new TransferThread(taskQueue, ftpClient, this);
 
         // category panel
-        localCategoryPane = new LocalCategoryPane(this);
+        localCategoryPane = new LocalCategoryPane(fileSystemView, this);
         remoteCategoryPane = new RemoteCategoryPane(ftpClient, this);
 
         contentPanel = new JPanel();
@@ -174,7 +177,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
             File file = task.getFile();
             if (file.isFile() && file.getPath().startsWith(Constants.TEMP_DIR))
                 localCategoryPane.openFile(file);
-            else if (file.getParentFile() == localCategoryPane.getCurrentFile())
+            else if (fileSystemView.getParentDirectory(file) == localCategoryPane.getCurrentFile())
                 localCategoryPane.getTableModel().addRow(task.getFile());
         } else {
             FTPFile file = task.getFtpFile();

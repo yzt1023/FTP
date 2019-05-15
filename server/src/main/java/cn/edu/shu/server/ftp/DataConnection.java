@@ -101,41 +101,37 @@ public class DataConnection {
         if (!isWrite)
             buff += 16;
 
-        byte[] bytes = new byte[Constants.KB + 16];
-        boolean lastWasCR = false;
-        BufferedInputStream bis = new BufferedInputStream(in);
-        BufferedOutputStream bos = new BufferedOutputStream(out);
-        int len;
-        while ((len = bis.read(bytes, 0, buff)) != -1) {
-            if (isWrite) {
-                if (session.isSecureMode()) {
+        if(session.getDataType() == DataType.ASCII){
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            PrintWriter writer = new PrintWriter(out, true);
+            String line;
+            while((line = reader.readLine()) != null){
+                if(isWrite && session.isSecureMode())
+                    line = session.encodeResponse(line);
+                else if(session.isSecureMode()){
+                    line = session.decodeRequest(line);
+                }
+
+                writer.println(line);
+            }
+        }else{
+            byte[] bytes = new byte[Constants.KB + 16];
+            BufferedInputStream bis = new BufferedInputStream(in);
+            BufferedOutputStream bos = new BufferedOutputStream(out);
+            int len;
+            while ((len = bis.read(bytes, 0, buff)) != -1) {
+                if(isWrite && session.isSecureMode()){
                     bytes = session.encodeBytes(bytes, len);
                     int fill = 16 - (len % 16);
                     len = len + fill;
-                }
-
-                if (session.getDataType() == DataType.BINARY)
-                    bos.write(bytes, 0, len);
-                else {
-                    for (int i = 0; i < len; i++) {
-                        lastWasCR = utils.toNetWrite(lastWasCR, bos, bytes[i]);
-                    }
-                }
-            } else {
-                if (session.isSecureMode()) {
+                }else if(session.isSecureMode()){
                     len = session.decodeBytes(bytes, len);
                 }
 
-                if (session.getDataType() == DataType.BINARY || utils.noConversionRequired())
-                    bos.write(bytes, 0, len);
-                else {
-                    for (int i = 0; i < len; i++) {
-                        lastWasCR = utils.fromNetWrite(lastWasCR, bos, bytes[i]);
-                    }
-                }
+                bos.write(bytes, 0, len);
             }
+            bos.flush();
         }
-        bos.flush();
     }
 
     public InetSocketAddress getSocketAddress() {

@@ -92,28 +92,8 @@ public class TransferThread extends Thread {
             BufferedInputStream in = new BufferedInputStream(inputStream);
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
             raf.seek(offset);
-            FileOutputStream out = new FileOutputStream(raf.getFD());
-            int buffer = Constants.KB + 16, len;
-            byte[] bytes = new byte[buffer];
-            long read = offset;
-            boolean lastWasCR = false;
-            while ((len = in.read(bytes, 0, buffer)) != -1) {
-                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
-                    break;
-
-                if (ftpClient.isSecureMode()) {
-                    len = ftpClient.decodeBytes(bytes, len);
-                }
-
-                if (ftpClient.getDataType() == DataType.BINARY || utils.noConversionRequired())
-                    out.write(bytes, 0, len);
-                else {
-                    for (byte b : bytes)
-                        lastWasCR = utils.fromNetWrite(lastWasCR, out, b);
-                }
-                read += len;
-                notifyProgress(len);
-            }
+            OutputStream out = new FileOutputStream(raf.getFD());
+            long read = transfer(out, in, true, offset);
             out.close();
             raf.close();
             in.close();
@@ -142,47 +122,21 @@ public class TransferThread extends Thread {
                 return true;
 
             ftpClient.setDataType(config.getFileDataType(file.getName()));
-            OutputStream outputStream = ftpClient.getAppeStream(ftpFile.getPath());
-            if (outputStream == null)
+            OutputStream out = ftpClient.getAppeStream(ftpFile.getPath());
+            if (out == null)
                 return false;
 
-            BufferedOutputStream out = new BufferedOutputStream(outputStream);
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             if (offset == -1)
                 offset = 0;
             raf.seek(offset);
-            FileInputStream in = new FileInputStream(raf.getFD());
-            byte[] bytes = new byte[Constants.KB + 16];
-            int readLen, writeLen;
-            long read = offset;
-            boolean lastWasCR = false;
-            while ((readLen = in.read(bytes, 0, Constants.KB)) != -1) {
-                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
-                    break;
 
-                if (ftpClient.isSecureMode()) {
-                    bytes = ftpClient.encodeBytes(bytes, readLen);
-                    int fill = 16 - (readLen % 16);
-                    writeLen = readLen + fill;
-                } else {
-                    writeLen = readLen;
-                }
-
-                if (ftpClient.getDataType() == DataType.BINARY)
-                    out.write(bytes, 0, writeLen);
-                else {
-                    for (int i = 0; i < writeLen; i++) {
-                        lastWasCR = utils.toNetWrite(lastWasCR, out, bytes[i]);
-                    }
-                }
-                read += readLen;
-                notifyProgress(readLen);
-            }
+            InputStream in = new FileInputStream(raf.getFD());
+            long read = transfer(out, in, false, offset);
             ftpFile.setSize(read);
-            out.flush();
-            out.close();
-            in.close();
             raf.close();
+            in.close();
+            out.close();
             ftpClient.readReply();
             return read == file.length();
         } else {
@@ -198,6 +152,68 @@ public class TransferThread extends Thread {
             }
             return true;
         }
+    }
+
+    private long transfer(OutputStream outputStream, InputStream inputStream, boolean download, long read) throws IOException {
+        if(ftpClient.getDataType() == DataType.ASCII){
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            PrintWriter writer = new PrintWriter(outputStream, true);
+            String line;
+            int readLen;
+            while((line = reader.readLine()) != null){
+                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
+                    break;
+
+                int eol = Constants.EOL.length;
+                if(download && ftpClient.isSecureMode()){
+                    line = ftpClient.decodeMessage(line);
+                    readLen = line.getBytes().length + eol;
+                }else if(ftpClient.isSecureMode()){
+                    readLen = line.getBytes().length + eol;
+                    line = ftpClient.encodeMessage(line);
+                }else{
+                    readLen = line.getBytes().length + eol;
+                }
+
+                writer.println(line);
+
+                read += readLen;
+                notifyProgress(readLen);
+            }
+        }else{
+            BufferedInputStream in = new BufferedInputStream(inputStream);
+            BufferedOutputStream out = new BufferedOutputStream(outputStream);
+
+            int buffer = Constants.KB;
+            if(download)
+                buffer = buffer + 16;
+
+            byte[] bytes = new byte[ Constants.KB + 16];
+            int readLen, writeLen, len;
+            while ((readLen = in.read(bytes, 0,buffer)) != -1) {
+                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
+                    break;
+
+                len = readLen;
+                if(download && ftpClient.isSecureMode()){
+                    writeLen = ftpClient.decodeBytes(bytes, readLen);
+                    len = writeLen;
+                }else if(ftpClient.isSecureMode()){
+                    bytes = ftpClient.encodeBytes(bytes, readLen);
+                    int fill = 16 - (readLen % 16);
+                    writeLen = readLen + fill;
+                }else{
+                    writeLen = readLen;
+                }
+
+                out.write(bytes, 0, writeLen);
+
+                read += len;
+                notifyProgress(len);
+            }
+            out.flush();
+        }
+        return read;
     }
 
     private void updateState(boolean result) {

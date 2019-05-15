@@ -125,11 +125,7 @@ public class LocalTableModel extends AbstractTableModel {
         this.files = newFiles;
         fireTableRowsInserted(files.length - 1, files.length - 1);
     }
-
-    public File[] getFiles() {
-        return files;
-    }
-
+    
     void setFiles(File[] files) {
         this.files = files;
         OrderByName();

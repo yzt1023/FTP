@@ -9,7 +9,7 @@
     <encoding>UTF-8</encoding>
     <activeMinPort>40000</activeMinPort>
     <activeMaxPort>65535</activeMaxPort>
-    <transferMode>BINARY</transferMode>
+    <transferMode>AUTO</transferMode>
     <defaultAscii>
       <dataType>bat</dataType>
       <dataType>c</dataType>
