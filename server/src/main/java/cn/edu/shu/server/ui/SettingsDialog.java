@@ -203,11 +203,12 @@ class SettingsDialog extends JDialog {
 
         GroupLayout.ParallelGroup para2 = layout.createParallelGroup();
         para2.addComponent(txtEncoding, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE);
-        para2.addGroup(group3).addGroup(group1).addGroup(group2).addGroup(GroupLayout.Alignment.TRAILING, group5);
+        para2.addGroup(group3).addGroup(group1).addGroup(group2);
 
         GroupLayout.ParallelGroup horizontal = layout.createParallelGroup();
         horizontal.addGroup(layout.createSequentialGroup().addGap(30).addComponent(scrollMsg, GroupLayout.PREFERRED_SIZE, 500, GroupLayout.PREFERRED_SIZE));
         horizontal.addGroup(layout.createSequentialGroup().addGap(30).addGroup(para1).addGroup(para2));
+        horizontal.addGroup(GroupLayout.Alignment.TRAILING, group5);
 
         layout.setHorizontalGroup(horizontal);
 

@@ -32,9 +32,8 @@ public class LocalCategoryPane extends CategoryPane {
     private Logger logger = Logger.getLogger(getClass());
 
 
-    public LocalCategoryPane(FileSystemView fileSystemView, TransferListener listener) {
+    public LocalCategoryPane(TransferListener listener) {
         super();
-        this.fileSystemView = fileSystemView;
         this.listener = listener;
         canUpload = false;
         lblCategory.setText("Local Category: ");
@@ -49,6 +48,7 @@ public class LocalCategoryPane extends CategoryPane {
         ctgTable.setModel(tableModel);
         ctgTable.getColumnModel().getColumn(0).setMaxWidth(20);
         // set home directory as current path
+        fileSystemView = FileSystemView.getFileSystemView();
         currentFile = fileSystemView.getHomeDirectory();
         root = new FileTreeNode(currentFile);
         refreshTable();

@@ -95,7 +95,7 @@ public class SecurityUtils {
 
     public String generateKey() {
         Random random = new Random();
-        int length = random.nextInt(25) + 8; // length : 5 - 99
+        int length = random.nextInt(25) + 8; // length : 8 - 24
         StringBuilder key = new StringBuilder();
         for (int i = 0; i < length; i++) {
             int temp = random.nextInt(3) % 3;

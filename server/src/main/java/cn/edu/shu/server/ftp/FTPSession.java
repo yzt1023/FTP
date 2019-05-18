@@ -7,6 +7,7 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
+import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.server.db.UserDao;
@@ -150,7 +151,7 @@ public class FTPSession {
         this.offset = 0L;
     }
 
-    boolean isSecureMode() {
+    public boolean isSecureMode() {
         return secureMode;
     }
 
@@ -188,5 +189,9 @@ public class FTPSession {
 
     byte[] encodeBytes(byte[] bytes, int len) {
         return securityUtils.encrypt(bytes, len, serverKey.getBytes());
+    }
+
+    public MD5 getMd5(){
+        return securityUtils.getMd5();
     }
 }

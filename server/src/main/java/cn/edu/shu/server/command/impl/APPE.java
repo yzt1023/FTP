@@ -70,8 +70,16 @@ public class APPE implements Command {
                 return;
             }
 
-            dataConnection.transferFromClient(session, outputStream);
-
+            String md5 = dataConnection.transferFromClient(session, outputStream);
+            if(session.isSecureMode()) {
+                FTPRequest md5Request = new FTPRequest(session.readRequest());
+                String clientMd5 = md5Request.getArgument();
+                if(!clientMd5.equals(md5)) {
+                    session.println(FTPReplyCode.ACTION_ABORTED + " File was modified illegally");
+                    file.delete();
+                    return;
+                }
+            }
             outputStream.close();
             raf.close();
         } catch (IOException e) {

@@ -85,15 +85,12 @@ public class ControlConnection implements Runnable, MsgListener {
         controlWriter.println(reply);
     }
 
-    String readRequest() {
+    String readRequest() throws IOException {
         try {
             request = controlReader.readLine();
         } catch (SocketTimeoutException e){
             log("Disconnected");
             closed = true;
-            return null;
-        } catch(IOException e) {
-            logger.error(e.getMessage(), e);
             return null;
         }
 

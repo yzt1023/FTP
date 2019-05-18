@@ -15,6 +15,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -146,6 +147,13 @@ public class CommonUtils {
         return icon;
     }
 
+    public String getAboutMessage(){
+        Calendar date = Calendar.getInstance();
+        String year = String.valueOf(date.get(Calendar.YEAR));
+        String message = "Copyright(C) 2018 - " + year + " All Rights Reserved.\nWritten by: Skye You";
+        message += "Email: yzt1023@126.com";
+        return message;
+    }
 
     public int producePort(int minPort, int maxPort) {
         maxPort++;

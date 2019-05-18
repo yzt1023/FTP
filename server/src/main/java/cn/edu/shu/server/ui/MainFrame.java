@@ -55,8 +55,4 @@ public class MainFrame extends JFrame implements MsgListener {
         String time = dateFormat.format(calendar.getTime());
         msgPane.println(time + " > " + message);
     }
-
-    FTPServer getFtpServer() {
-        return ftpServer;
-    }
 }

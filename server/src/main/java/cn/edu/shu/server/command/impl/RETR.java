@@ -80,7 +80,11 @@ public class RETR implements Command {
                 return;
             }
 
-            dataConnection.transferToClient(session, inputStream);
+            String md5 = dataConnection.transferToClient(session, inputStream);
+            if(session.isSecureMode()) {
+                session.println(FTPReplyCode.CLOSING_DATA_CONNECTION + " " + md5);
+                return;
+            }
 
             inputStream.close();
         } catch (IOException e) {

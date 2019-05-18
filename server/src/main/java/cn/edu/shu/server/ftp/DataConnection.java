@@ -6,6 +6,7 @@
 package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
+import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.config.SystemConfig;
@@ -26,6 +27,7 @@ public class DataConnection {
     private InetSocketAddress socketAddress;
     private Logger logger = Logger.getLogger(getClass());
     private CommonUtils utils = CommonUtils.getInstance();
+    private MD5 md5 = new MD5();
 
     public void initActiveDataConnection(InetSocketAddress socketAddress) {
         closeConnection();
@@ -72,10 +74,13 @@ public class DataConnection {
         }
     }
 
-    public void transferToClient(FTPSession session, InputStream in) throws IOException {
+    public String transferToClient(FTPSession session, InputStream in) throws IOException {
         OutputStream out = dataSocket.getOutputStream();
         transfer(session, true, in, out);
         out.close();
+        if(session.isSecureMode())
+            return md5.getString();
+        return null;
     }
 
     public void transferToClient(FTPSession session, List<String> files) throws IOException {
@@ -90,10 +95,14 @@ public class DataConnection {
         writer.close();
     }
 
-    public void transferFromClient(FTPSession session, OutputStream out) throws IOException {
+    public String transferFromClient(FTPSession session, OutputStream out) throws IOException {
         InputStream in = dataSocket.getInputStream();
         transfer(session, false, in, out);
         in.close();
+        if(session.isSecureMode())
+            return md5.getString();
+
+        return null;
     }
 
     private void transfer(FTPSession session, boolean isWrite, InputStream in, OutputStream out) throws IOException {
@@ -101,15 +110,18 @@ public class DataConnection {
         if (!isWrite)
             buff += 16;
 
+        md5.initial();
         if(session.getDataType() == DataType.ASCII){
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             PrintWriter writer = new PrintWriter(out, true);
             String line;
             while((line = reader.readLine()) != null){
-                if(isWrite && session.isSecureMode())
+                if(isWrite && session.isSecureMode()) {
+                    md5.update(line);
                     line = session.encodeResponse(line);
-                else if(session.isSecureMode()){
+                }else if(session.isSecureMode()){
                     line = session.decodeRequest(line);
+                    md5.update(line);
                 }
 
                 writer.println(line);
@@ -121,11 +133,13 @@ public class DataConnection {
             int len;
             while ((len = bis.read(bytes, 0, buff)) != -1) {
                 if(isWrite && session.isSecureMode()){
+                    md5.update(bytes, 0, len);
                     bytes = session.encodeBytes(bytes, len);
                     int fill = 16 - (len % 16);
                     len = len + fill;
                 }else if(session.isSecureMode()){
                     len = session.decodeBytes(bytes, len);
+                    md5.update(bytes, 0, len);
                 }
 
                 bos.write(bytes, 0, len);

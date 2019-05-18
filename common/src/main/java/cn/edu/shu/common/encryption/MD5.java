@@ -17,6 +17,11 @@ public class MD5 {
     private final static long D = 0x10325476L;
     //four chaining variables
 
+    private long a;
+    private long b;
+    private long c;
+    private long d;
+
     private static long[] T = new long[64];
 
     static {
@@ -45,16 +50,28 @@ public class MD5 {
         return b + rotateLeft(a + (c ^ (b | (~d))) + mj + ti, s);
     }
 
-    public String getMD5(byte[] input) {
-        long a = A, b = B, c = C, d = D;
-        int msgLen = input.length;
+    public String getMD5(byte[] input, int start, int end) {
+        initial();
+        update(input, start, end);
+        return getString();
+    }
+
+    public void initial(){
+        a = A;
+        b = B;
+        c = C;
+        d = D;
+    }
+
+    public void update(byte[] bytes, int start, int end){
+        int msgLen = end - start;
         int blockSize = ((msgLen + 8) >>> 6) + 1;
         int totalLen = blockSize << 6;
 
         // ========== step 1: filling message ==========
         byte[] M = new byte[totalLen];
         // original message
-        System.arraycopy(input, 0, M, 0, msgLen);
+        System.arraycopy(bytes, start, M, 0, msgLen);
         // fill the first bit as 1, and others as 0
         if (msgLen % 64 < 56)
             M[msgLen] = (byte) (1 << 7);
@@ -133,30 +150,23 @@ public class MD5 {
             c = (c + lastC) & 0xFFFFFFFFL;
             d = (d + lastD) & 0xFFFFFFFFL;
         }
+    }
 
-        // ========== step 3 : connect to the result ==========
+    public void update(String str){
+        byte[] bytes = str.getBytes();
+        update(bytes, 0, bytes.length);
+    }
+
+    public String getString() {
         a = encode(a);
         b = encode(b);
         c = encode(c);
         d = encode(d);
-
-        return getString(a, b, c, d);
-    }
-
-    public String get16Md5(byte[] input){
-        return getMD5(input).substring(8, 24);
-    }
-
-    public String getMD5(String message){
-        return getMD5(message.getBytes());
+        return toHexString(a) + toHexString(b) + toHexString(c) + toHexString(d);
     }
 
     private long encode(long t) {
         return ((t >> 24) & 0xff) | ((t >> 16) & 0xff) << 8 | ((t >> 8) & 0xff) << 16 | (t & 0xff) << 24;
-    }
-
-    private String getString(long a, long b, long c, long d) {
-        return toHexString(a) + toHexString(b) + toHexString(c) + toHexString(d);
     }
 
     private String toHexString(long value) {
@@ -164,5 +174,15 @@ public class MD5 {
         while (temp.length() < 8)
             temp.insert(0, '0');
         return temp.toString();
+    }
+
+
+    public String get16Md5(byte[] input){
+        return getMD5(input, 0, input.length).substring(8, 24);
+    }
+
+    public String getMD5(String message){
+        byte[] bytes = message.getBytes();
+        return getMD5(bytes, 0, bytes.length);
     }
 }

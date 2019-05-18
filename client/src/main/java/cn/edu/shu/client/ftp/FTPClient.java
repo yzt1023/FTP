@@ -117,11 +117,12 @@ public class FTPClient {
         readReply();
     }
 
-    public synchronized void readReply() throws ConnectionException {
+    public synchronized String readReply() throws ConnectionException {
         response = controlConnection.readReply();
+        return response;
     }
 
-    private synchronized void sendCommand(String command) throws ConnectionException {
+    public synchronized void sendCommand(String command) throws ConnectionException {
         if (controlConnection == null)
             return;
 

@@ -96,11 +96,9 @@ public class MenuBar extends JMenuBar {
         });
 
         aboutItem.addActionListener(e -> {
-            Calendar date = Calendar.getInstance();
-            String year = String.valueOf(date.get(Calendar.YEAR));
-            String message = "FTPClient\nCopyright(C) 2018 - " + year + " All Rights Reserved.\nWritten by: Skye You";
+            String message = "FTPClient\n" + utils.getAboutMessage();
             ImageIcon image = new ImageIcon(utils.getResourcePath(getClass(), "logo.png"));
-            MessageUtils.showMessage(message, "about FTP", image);
+            MessageUtils.showMessage(message, "About FTP", image);
         });
 
         registerItem.addActionListener(e -> {

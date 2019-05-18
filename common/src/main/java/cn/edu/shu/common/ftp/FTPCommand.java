@@ -35,6 +35,7 @@ public interface FTPCommand {
     String APPE = "APPE";   // appends data to the end of file
     String RETR = "RETR";   // download file
     String STOR = "STOR";   // upload file
+    String MD5 = "MD5";
     String STOU = "STOU";
     String ALLO = "ALLO";
     String ABOR = "ABOR";

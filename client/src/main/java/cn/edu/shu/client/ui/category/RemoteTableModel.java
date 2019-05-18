@@ -133,8 +133,8 @@ public class RemoteTableModel extends AbstractTableModel {
         if (rows.length == 0)
             return;
         Arrays.sort(rows);
-        for (int row : rows)
-            files.remove(row);
+        for (int i = rows.length - 1; i >= 0; i--)
+            files.remove(rows[i]);
         fireTableRowsDeleted(rows[0], rows[rows.length - 1]);
     }
 

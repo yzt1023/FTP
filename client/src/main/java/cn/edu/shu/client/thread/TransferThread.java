@@ -14,6 +14,8 @@ import cn.edu.shu.client.ftp.FTPFile;
 import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.common.bean.DataType;
+import cn.edu.shu.common.encryption.MD5;
+import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import org.apache.log4j.Logger;
@@ -33,12 +35,14 @@ public class TransferThread extends Thread {
     private Task task;
     private SystemConfig config;
     private boolean stop;
+    private MD5 md5;
 
     public TransferThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener) {
         this.queue = queue;
         this.ftpClient = ftpClient;
         this.listener = listener;
         this.config = ftpClient.getConfig();
+        this.md5 = new MD5();
     }
 
     @Override
@@ -89,16 +93,24 @@ public class TransferThread extends Thread {
             if (inputStream == null)
                 return false;
 
-            BufferedInputStream in = new BufferedInputStream(inputStream);
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
             raf.seek(offset);
             OutputStream out = new FileOutputStream(raf.getFD());
-            long read = transfer(out, in, true, offset);
+            long read = transfer(out, inputStream, true, offset);
             out.close();
             raf.close();
-            in.close();
-            ftpClient.readReply();
-            return read == ftpFile.getSize();
+            inputStream.close();
+
+            String reply = ftpClient.readReply();
+            if(ftpClient.isSecureMode()){
+                String serverMd5 = reply.substring(4);
+                if(!serverMd5.equals(md5.getString())){
+                    file.delete();
+                    return false;
+                }
+            }
+
+            return read >= ftpFile.getSize();
         } else {
             if (!file.exists() && !file.mkdir())
                 return false;
@@ -137,8 +149,14 @@ public class TransferThread extends Thread {
             raf.close();
             in.close();
             out.close();
-            ftpClient.readReply();
-            return read == file.length();
+            if(ftpClient.isSecureMode())
+                ftpClient.sendCommand(FTPCommand.MD5 + " " + md5.getString());
+
+            String reply = ftpClient.readReply();
+            if(reply.charAt(0) != '2')
+                return false;
+
+            return read >= file.length();
         } else {
             if (ftpClient.getFileSize(ftpFile.getPath()) == -1 && !ftpClient.makeDirectory(ftpFile.getPath()))
                 return false;
@@ -155,6 +173,7 @@ public class TransferThread extends Thread {
     }
 
     private long transfer(OutputStream outputStream, InputStream inputStream, boolean download, long read) throws IOException {
+        md5.initial();
         if(ftpClient.getDataType() == DataType.ASCII){
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             PrintWriter writer = new PrintWriter(outputStream, true);
@@ -164,15 +183,16 @@ public class TransferThread extends Thread {
                 if (stop || Constants.STATE_PAUSE.equals(task.getState()))
                     break;
 
-                int eol = Constants.EOL.length;
                 if(download && ftpClient.isSecureMode()){
                     line = ftpClient.decodeMessage(line);
-                    readLen = line.getBytes().length + eol;
+                    md5.update(line);
+                    readLen = line.getBytes().length + 2;
                 }else if(ftpClient.isSecureMode()){
-                    readLen = line.getBytes().length + eol;
+                    readLen = line.getBytes().length + 2;
+                    md5.update(line);
                     line = ftpClient.encodeMessage(line);
                 }else{
-                    readLen = line.getBytes().length + eol;
+                    readLen = line.getBytes().length + 2;
                 }
 
                 writer.println(line);
@@ -197,8 +217,10 @@ public class TransferThread extends Thread {
                 len = readLen;
                 if(download && ftpClient.isSecureMode()){
                     writeLen = ftpClient.decodeBytes(bytes, readLen);
+                    md5.update(bytes, 0, writeLen);
                     len = writeLen;
                 }else if(ftpClient.isSecureMode()){
+                    md5.update(bytes, 0, readLen);
                     bytes = ftpClient.encodeBytes(bytes, readLen);
                     int fill = 16 - (readLen % 16);
                     writeLen = readLen + fill;
@@ -242,4 +264,6 @@ public class TransferThread extends Thread {
     public void close() {
         stop = true;
     }
+    // TODO: 5/17/2019 transfer md5 using data connection
+    // TODO: 5/17/2019 server new thread to transfer
 }

@@ -85,7 +85,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         transferThread = new TransferThread(taskQueue, ftpClient, this);
 
         // category panel
-        localCategoryPane = new LocalCategoryPane(fileSystemView, this);
+        localCategoryPane = new LocalCategoryPane(this);
         remoteCategoryPane = new RemoteCategoryPane(ftpClient, this);
 
         contentPanel = new JPanel();
@@ -177,7 +177,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
             File file = task.getFile();
             if (file.isFile() && file.getPath().startsWith(Constants.TEMP_DIR))
                 localCategoryPane.openFile(file);
-            else if (fileSystemView.getParentDirectory(file) == localCategoryPane.getCurrentFile())
+            else if (file.getParent().equals(localCategoryPane.getCurrentFile().getPath()))
                 localCategoryPane.getTableModel().addRow(task.getFile());
         } else {
             FTPFile file = task.getFtpFile();
