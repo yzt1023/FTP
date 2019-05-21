@@ -14,20 +14,19 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class PlainControlConnection implements ControlConnection {
+public class PlainConnection {
 
     private Socket socket;
     BufferedReader reader;
     PrintWriter writer;
     private FTPClient client;
-    MsgListener listener;
+    private MsgListener listener;
 
-    PlainControlConnection(FTPClient client) {
+    PlainConnection(FTPClient client) {
         this.client = client;
         this.listener = client.getListener();
     }
 
-    @Override
     public void connect(String host, int port) throws ConnectionException {
         try {
             socket = new Socket(host, port);
@@ -36,14 +35,12 @@ public class PlainControlConnection implements ControlConnection {
         } catch (Exception e) {
             throw new ConnectionException(e.getMessage(), e);
         }
-        // set time out
 
         // receive welcome message;
         readReply();
     }
 
-    @Override
-    public String readReply() throws ConnectionException {
+    String readReply() throws ConnectionException {
         try {
             String line = reader.readLine();
             if (line == null)
@@ -74,8 +71,7 @@ public class PlainControlConnection implements ControlConnection {
         return reply;
     }
 
-    @Override
-    public void sendCommand(String command) throws ConnectionException {
+    void sendCommand(String command) throws ConnectionException {
         if (command.startsWith(FTPCommand.PASS) || command.startsWith(FTPCommand.PASS)) {
             String temp = command.substring(0, command.lastIndexOf(" "));
             listener.println(temp + " ******");
@@ -92,18 +88,10 @@ public class PlainControlConnection implements ControlConnection {
         return command;
     }
 
-    @Override
-    public String executeCommand(String command) throws ConnectionException {
-        sendCommand(command);
-        return readReply();
-    }
-
-    @Override
-    public InetAddress getLocalAddress() {
+    InetAddress getLocalAddress() {
         return socket.getLocalAddress();
     }
 
-    @Override
     public void close() throws IOException {
         if (writer != null)
             writer.close();

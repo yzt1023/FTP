@@ -264,6 +264,5 @@ public class TransferThread extends Thread {
     public void close() {
         stop = true;
     }
-    // TODO: 5/17/2019 transfer md5 using data connection
     // TODO: 5/17/2019 server new thread to transfer
 }

@@ -23,7 +23,7 @@ public class DBConnPool {
         return instance;
     }
 
-    public synchronized Connection reserveConn() {
+    synchronized Connection reserveConn() {
         if(freeConn.isEmpty())
             freeConn.add(createConn());
         Connection conn = freeConn.get(0);
@@ -32,7 +32,7 @@ public class DBConnPool {
         return conn;
     }
 
-    public synchronized void releaseConn(Connection conn){
+    synchronized void releaseConn(Connection conn){
         if(resrvConn.contains(conn)) {
             resrvConn.remove(conn);
             freeConn.add(conn);

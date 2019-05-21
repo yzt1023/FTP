@@ -25,7 +25,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Deque;
+import java.util.Queue;
 import java.util.LinkedList;
 
 public class MainFrame extends JFrame implements TransferListener, ConnectListener, MsgListener {
@@ -41,12 +41,11 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
     private TaskPane taskPane;
     private MenuBar menuBar;
     private FTPClient ftpClient;
-    private Deque<Task> taskQueue;
+    private Queue<Task> taskQueue;
     private TransferThread transferThread;
     private CommonUtils utils;
     private TransferUtils transferUtils;
     private Logger logger = Logger.getLogger(getClass());
-    private FileSystemView fileSystemView;
     private SystemConfig config;
 
     public MainFrame() {
@@ -56,7 +55,6 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
         utils = CommonUtils.getInstance();
         transferUtils = TransferUtils.getInstance();
-        fileSystemView = FileSystemView.getFileSystemView();
         config = SystemConfig.getInstance();
         config.initConfig();
         Image icon = Toolkit.getDefaultToolkit().getImage(utils.getResourcePath(getClass(), "logo.png"));
@@ -133,10 +131,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         task.setMaxValue(size);
         task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
-        if (tempDir)
-            taskQueue.offerFirst(task);
-        else
-            taskQueue.offerLast(task);
+        taskQueue.offer(task);
     }
 
     @Override
@@ -154,7 +149,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         task.setMaxValue(size);
         task.setDisplaySize(transferUtils.getFormatSize(size));
         taskPane.addTask(task);
-        taskQueue.offerLast(task);
+        taskQueue.offer(task);
     }
 
     @Override

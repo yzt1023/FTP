@@ -14,6 +14,7 @@ import cn.edu.shu.server.db.UserDao;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 
 public class FTPSession {
@@ -79,7 +80,7 @@ public class FTPSession {
         controlConnection.println(message);
     }
 
-    public String readRequest() {
+    public String readRequest() throws IOException {
         return controlConnection.readRequest();
     }
 

@@ -40,7 +40,7 @@ public class FTPClient {
     private String encoding;
     private String host;
     private int port;
-    private PlainControlConnection controlConnection;
+    private PlainConnection controlConnection;
     private User user;
 
     private String response;
@@ -67,9 +67,9 @@ public class FTPClient {
 
     public synchronized void connect(String host, int port) throws ConnectionException {
         if (secureMode)
-            controlConnection = new SecureControlConnection(this);
+            controlConnection = new SecureConnection(this);
         else
-            controlConnection = new PlainControlConnection(this);
+            controlConnection = new PlainConnection(this);
         controlConnection.connect(host, port);
         this.host = host;
         this.port = port;
@@ -387,32 +387,32 @@ public class FTPClient {
     }
 
     public int decodeBytes(byte[] bytes, int len) {
-        if (controlConnection instanceof SecureControlConnection) {
-            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+        if (controlConnection instanceof SecureConnection) {
+            SecureConnection connection = (SecureConnection) controlConnection;
             return securityUtils.decrypt(bytes, len, connection.getServerKey().getBytes());
         }
         return len;
     }
 
     public byte[] encodeBytes(byte[] bytes, int len) {
-        if (controlConnection instanceof SecureControlConnection) {
-            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+        if (controlConnection instanceof SecureConnection) {
+            SecureConnection connection = (SecureConnection) controlConnection;
             return securityUtils.encrypt(bytes, len, connection.getClientKey().getBytes());
         }
         return bytes;
     }
 
     public String encodeMessage(String message) {
-        if (controlConnection instanceof SecureControlConnection) {
-            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+        if (controlConnection instanceof SecureConnection) {
+            SecureConnection connection = (SecureConnection) controlConnection;
             return securityUtils.encrypt(message, connection.getClientKey());
         }
         return message;
     }
 
     public String decodeMessage(String message) {
-        if (controlConnection instanceof SecureControlConnection) {
-            SecureControlConnection connection = (SecureControlConnection) controlConnection;
+        if (controlConnection instanceof SecureConnection) {
+            SecureConnection connection = (SecureConnection) controlConnection;
             return securityUtils.decrypt(message, connection.getServerKey());
         }
         return message;

@@ -76,4 +76,5 @@ public interface Constants {
     String REMOVE_FAILED = "Failed to remove!";
     String ADD_SUCCEED = "Add successfully!";
     String ADD_FAILED = "File type existed!";
+    String INVALID_PATH = "Invalid path! Folder not exists or not a folder.";
 }

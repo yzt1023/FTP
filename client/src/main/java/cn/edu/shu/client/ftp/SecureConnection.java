@@ -13,12 +13,12 @@ import cn.edu.shu.common.util.SecurityUtils;
 import java.io.IOException;
 import java.math.BigInteger;
 
-public class SecureControlConnection extends PlainControlConnection {
+public class SecureConnection extends PlainConnection {
 
     private SecurityUtils securityUtils;
     private String clientKey, serverKey;
 
-    SecureControlConnection(FTPClient client) {
+    SecureConnection(FTPClient client) {
         super(client);
         securityUtils = client.getSecurityUtils();
     }
@@ -80,11 +80,11 @@ public class SecureControlConnection extends PlainControlConnection {
         serverKey = null;
     }
 
-    public String getClientKey() {
+    String getClientKey() {
         return clientKey;
     }
 
-    public String getServerKey() {
+    String getServerKey() {
         return serverKey;
     }
 }

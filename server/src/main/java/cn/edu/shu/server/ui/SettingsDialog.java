@@ -129,8 +129,8 @@ class SettingsDialog extends JDialog {
         }
 
         File file = new File(rootDir);
-        if (!file.exists()) {
-            MessageUtils.showInfoMessage(Constants.PATH_NOT_EXISTS);
+        if (!file.exists() || file.isFile()) {
+            MessageUtils.showInfoMessage(Constants.INVALID_PATH);
             return false;
         }
 
