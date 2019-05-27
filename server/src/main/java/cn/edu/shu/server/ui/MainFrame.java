@@ -14,11 +14,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class MainFrame extends JFrame implements MsgListener {
-    private MsgPane msgPane;
-    private FTPServer ftpServer;
     private static final int DEFAULT_WIDTH = 1000;
     private static final int DEFAULT_HEIGHT = 700;
-    public MainFrame(){
+    private MsgPane msgPane;
+    private FTPServer ftpServer;
+
+    public MainFrame() {
         super("FTPServer");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLocation(600, 200);
@@ -29,13 +30,17 @@ public class MainFrame extends JFrame implements MsgListener {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                DBConnPool.getInstance().clearConns();
-                if(!ftpServer.isStop())
-                    ftpServer.stopServer();
-                System.exit(0);
+                exit();
             }
         });
         initComponents();
+    }
+
+    void exit() {
+        DBConnPool.getInstance().clearConns();
+        if (!ftpServer.isStop())
+            ftpServer.stopServer();
+        System.exit(0);
     }
 
     private void initComponents() {
@@ -49,7 +54,7 @@ public class MainFrame extends JFrame implements MsgListener {
         ftpServer.start();
     }
 
-    public void println(String message){
+    public void println(String message) {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String time = dateFormat.format(calendar.getTime());

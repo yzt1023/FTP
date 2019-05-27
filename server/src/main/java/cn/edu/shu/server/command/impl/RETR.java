@@ -92,7 +92,6 @@ public class RETR implements Command {
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
             return;
         }finally {
-            session.setOffset(0);
             dataConnection.closeConnection();
         }
         session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));

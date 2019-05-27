@@ -90,11 +90,11 @@ public class RSA {
             text = text.substring(remain);
             i = 1;
         }
-        for(; i < arrayLen; i++){
-            if(text.length() > 3) {
+        for (; i < arrayLen; i++) {
+            if (text.length() > 3) {
                 array[i] = Integer.parseInt(text.substring(0, 3));
                 text = text.substring(3);
-            }else {
+            } else {
                 array[i] = Integer.parseInt(text);
             }
         }

@@ -60,7 +60,7 @@ class MenuBar extends JMenuBar {
             int i = MessageUtils.showConfirmMessage(Constants.CONFIRM_TO_EXIT,
                     "confirm dialog");
             if (i == 0)
-                System.exit(0);
+                frame.exit();
         });
 
         userItem.addActionListener(e -> {

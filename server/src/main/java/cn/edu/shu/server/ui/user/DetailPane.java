@@ -59,7 +59,7 @@ public class DetailPane extends JPanel {
             else
                 success = listener.updateUser(user);
 
-            if(success)
+            if (success)
                 MessageUtils.showInfoMessage(Constants.SAVE_SUCCEED);
             else
                 MessageUtils.showInfoMessage(Constants.SAVE_FAILED);
@@ -67,7 +67,7 @@ public class DetailPane extends JPanel {
         });
 
         cbValid.addChangeListener(e -> {
-            if(cbValid.isSelected())
+            if (cbValid.isSelected())
                 setEnabled(true);
             else
                 setEnabled(false);
@@ -92,7 +92,6 @@ public class DetailPane extends JPanel {
         infoPane.setLayout(layout);
 
         GroupLayout.ParallelGroup lblGroup = layout.createParallelGroup();
-        lblGroup.addComponent(cbValid);
         lblGroup.addComponent(lblUsername);
         lblGroup.addComponent(lblPassword);
 
@@ -103,11 +102,11 @@ public class DetailPane extends JPanel {
         GroupLayout.SequentialGroup horizontalGroup = layout.createSequentialGroup();
         horizontalGroup.addContainerGap();
         horizontalGroup.addGroup(lblGroup);
-        horizontalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED);
+        horizontalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
         horizontalGroup.addGroup(txtGroup);
         horizontalGroup.addContainerGap();
 
-        layout.setHorizontalGroup(horizontalGroup);
+        layout.setHorizontalGroup(layout.createParallelGroup().addComponent(cbValid).addGroup(horizontalGroup));
 
         GroupLayout.SequentialGroup verticalGroup = layout.createSequentialGroup();
         verticalGroup.addComponent(cbValid);
@@ -134,13 +133,11 @@ public class DetailPane extends JPanel {
         layout.setHorizontalGroup(horizontalGroup);
 
         GroupLayout.SequentialGroup verticalGroup = layout.createSequentialGroup();
-        verticalGroup.addContainerGap();
         verticalGroup.addComponent(cbRead);
         verticalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
         verticalGroup.addComponent(cbWrite);
         verticalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
         verticalGroup.addComponent(cbDelete);
-        verticalGroup.addContainerGap();
         layout.setVerticalGroup(verticalGroup);
     }
 
@@ -195,7 +192,7 @@ public class DetailPane extends JPanel {
         cbWrite.setSelected(user.isWritable());
         cbDelete.setSelected(user.canDeleted());
         cbValid.setSelected(user.isValid());
-        if(!user.isValid())
+        if (!user.isValid())
             setEnabled(false);
     }
 
@@ -211,7 +208,7 @@ public class DetailPane extends JPanel {
     }
 
     @Override
-    public void setEnabled(boolean enabled){
+    public void setEnabled(boolean enabled) {
         txtUsername.setEnabled(enabled);
         txtPassword.setEnabled(enabled);
         cbRead.setEnabled(enabled);

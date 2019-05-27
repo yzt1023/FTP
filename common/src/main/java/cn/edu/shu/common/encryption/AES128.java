@@ -262,7 +262,6 @@ public class AES128 {
             addRoundKey(matrix, 0);
             for (int j = 1; j < 10; j++) {
                 subBytes(matrix);
-
                 shiftRows(matrix);
                 mixColumns(matrix);
                 addRoundKey(matrix, j);

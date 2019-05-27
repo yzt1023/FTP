@@ -14,36 +14,7 @@ import java.util.Map;
 public class CommandFactory {
     private static Map<String, Command> commandMap = new HashMap<>();
 
-    public static Command getCommand(String command){
-        if(command == null || command.equals(""))
-            return null;
-        return commandMap.get(command.toUpperCase());
-    }
-
     static {
-/*        commandMap.put("ABOR", new ABOR());
-        commandMap.put("ACCT", new ACCT());
-        commandMap.put("AUTH", new AUTH());
-        commandMap.put("EPRT", new EPRT());
-        commandMap.put("EPSV", new EPSV());
-        commandMap.put("FEAT", new FEAT());
-        commandMap.put("HELP", new HELP());
-        commandMap.put("LANG", new LANG());
-        commandMap.put("LIST", new LIST());
-        commandMap.put("MD5", new MD5());
-        commandMap.put("MFMT", new MFMT());
-        commandMap.put("MMD5", new MD5());
-        commandMap.put("MDTM", new MDTM());
-        commandMap.put("MLST", new MLST());
-        commandMap.put("MODE", new MODE());
-        commandMap.put("NLST", new NLST());
-        commandMap.put("OPTS", new OPTS());
-        commandMap.put("REIN", new REIN());
-        commandMap.put("SITE", new SITE());
-        commandMap.put("STAT", new STAT());
-        commandMap.put("STOU", new STOU());
-        commandMap.put("STRU", new STRU());
-        commandMap.put("SYST", new SYST());*/
         commandMap.put(FTPCommand.APPE, new APPE());
         commandMap.put(FTPCommand.AUTH, new AUTH());
         commandMap.put(FTPCommand.CDUP, new CDUP());
@@ -67,6 +38,12 @@ public class CommandFactory {
         commandMap.put(FTPCommand.STOR, new STOR());
         commandMap.put(FTPCommand.TYPE, new TYPE());
         commandMap.put(FTPCommand.USER, new USER());
+    }
+
+    public static Command getCommand(String command) {
+        if (command == null || command.equals(""))
+            return null;
+        return commandMap.get(command.toUpperCase());
     }
 
 }

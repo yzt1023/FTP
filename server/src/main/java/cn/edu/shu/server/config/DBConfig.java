@@ -29,7 +29,6 @@ public class DBConfig {
             password = properties.getProperty("password");
         }catch (Exception e){
             logger.error(e.getMessage(), e);
-
         }
     }
 

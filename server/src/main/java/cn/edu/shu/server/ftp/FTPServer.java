@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 public class FTPServer extends Thread {
     private ServerSocket serverSocket;
     private ThreadPoolExecutor executor;
-    //    private Thread server;
     private MsgListener listener;
     private Logger logger;
     private boolean stop;
@@ -38,22 +36,10 @@ public class FTPServer extends Thread {
 
     @Override
     public void run() {
-        listener.println("Waiting for connect...");
-        while (!stop) {
-            listen();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage(), e);
-            }
-        }
-    }
-
-    private void listen() {
         try {
             while (!stop) {
+                listener.println("Waiting for connection...");
                 Socket socket = serverSocket.accept();
-                socket.setSoTimeout(1000);
                 listener.println("Connected, sending welcome message...");
                 socket.setTcpNoDelay(true);  // close the buffer of socket to ensure transfer speed
                 int timeout = config.getTimeout();
@@ -63,8 +49,6 @@ public class FTPServer extends Thread {
                 controlConnection.setListener(listener);
                 executor.execute(controlConnection);
             }
-        } catch (SocketTimeoutException ignored) {
-            listen();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
