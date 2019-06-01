@@ -64,7 +64,7 @@ public class ControlConnection implements Runnable, MsgListener {
         }
     }
 
-    private void sendWelcomeMessage() {
+    private synchronized void sendWelcomeMessage() {
         String welcomeMsg = config.getWelcomeMessage();
         int index = welcomeMsg.indexOf("\n");
         while (index != -1) {
@@ -76,7 +76,7 @@ public class ControlConnection implements Runnable, MsgListener {
     }
 
     @Override
-    public void println(String reply) {
+    public synchronized void println(String reply) {
         log(reply);
 
         if (session.isSecureMode())

@@ -34,7 +34,7 @@ public class PORT implements Command {
             return;
         }
 
-        DataConnection dataConnection = session.getDataConnection();
+        DataConnection dataConnection = session.createDataConnection();
         dataConnection.initActiveDataConnection(socketAddress);
         session.println(FTPReplyCode.COMMAND_OK.getReply());
     }

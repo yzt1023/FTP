@@ -15,7 +15,6 @@ import cn.edu.shu.client.listener.TransferListener;
 import cn.edu.shu.client.ui.task.Task;
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.encryption.MD5;
-import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import org.apache.log4j.Logger;
@@ -36,6 +35,7 @@ public class TransferThread extends Thread {
     private SystemConfig config;
     private boolean stop;
     private MD5 md5;
+    private String serverMd5;
 
     public TransferThread(Queue<Task> queue, FTPClient ftpClient, TransferListener listener) {
         this.queue = queue;
@@ -69,8 +69,10 @@ public class TransferThread extends Thread {
                         result = download(task.getFile(), task.getFtpFile());
                     else
                         result = upload(task.getFile(), task.getFtpFile());
-                } catch (IOException e) {
+                } catch (Exception e) {
                     logger.error(e.getMessage(), e);
+                    ftpClient.readReply();
+                    task.setState(Constants.STATE_PAUSE);
                 } finally {
                     updateState(result);
                     queue.remove();
@@ -96,21 +98,20 @@ public class TransferThread extends Thread {
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
             raf.seek(offset);
             OutputStream out = new FileOutputStream(raf.getFD());
-            long read = transfer(out, inputStream, true, offset);
-            out.close();
-            raf.close();
-            inputStream.close();
 
-            String reply = ftpClient.readReply();
-            if(ftpClient.isSecureMode()){
-                String serverMd5 = reply.substring(4);
-                if(!serverMd5.equals(md5.getString())){
-                    file.delete();
-                    return false;
-                }
+            try {
+                transfer(out, inputStream, true, file, offset);
+            }catch (Exception e){
+                inputStream.close();
+                out.close();
+                throw e;
             }
 
-            return read >= ftpFile.getSize();
+            ftpClient.readReply();
+            if(ftpClient.isSecureMode() && DataType.BINARY == ftpClient.getDataType())
+                return serverMd5.equals(md5.getFileMd5(file));
+
+            return true;
         } else {
             if (!file.exists() && !file.mkdir())
                 return false;
@@ -128,6 +129,7 @@ public class TransferThread extends Thread {
         //set ftp info
         ftpFile.setLastChanged(new Date());
         ftpFile.setType(fileSystemView.getSystemTypeDescription(file));
+        ftpFile.setSize(file.length());
         if (file.isFile()) {
             long offset = ftpClient.getFileSize(ftpFile.getPath());
             if (offset == file.length())
@@ -144,19 +146,17 @@ public class TransferThread extends Thread {
             raf.seek(offset);
 
             InputStream in = new FileInputStream(raf.getFD());
-            long read = transfer(out, in, false, offset);
-            ftpFile.setSize(read);
-            raf.close();
-            in.close();
-            out.close();
-            if(ftpClient.isSecureMode())
-                ftpClient.sendCommand(FTPCommand.MD5 + " " + md5.getString());
+            try {
+                transfer(out, in, false, file, offset);
+            }catch (Exception e) {
+                in.close();
+                out.close();
+                throw e;
+            }
 
             String reply = ftpClient.readReply();
-            if(reply.charAt(0) != '2')
-                return false;
+            return reply.charAt(0) == '2';
 
-            return read >= file.length();
         } else {
             if (ftpClient.getFileSize(ftpFile.getPath()) == -1 && !ftpClient.makeDirectory(ftpFile.getPath()))
                 return false;
@@ -172,86 +172,123 @@ public class TransferThread extends Thread {
         }
     }
 
-    private long transfer(OutputStream outputStream, InputStream inputStream, boolean download, long read) throws IOException {
-        md5.initial();
-        if(ftpClient.getDataType() == DataType.ASCII){
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            PrintWriter writer = new PrintWriter(outputStream, true);
-            String line;
-            int readLen;
-            while((line = reader.readLine()) != null){
-                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
-                    break;
-
-                if(download && ftpClient.isSecureMode()){
-                    line = ftpClient.decodeMessage(line);
-                    md5.update(line);
-                    readLen = line.getBytes().length + 2;
-                }else if(ftpClient.isSecureMode()){
-                    readLen = line.getBytes().length + 2;
-                    md5.update(line);
-                    line = ftpClient.encodeMessage(line);
-                }else{
-                    readLen = line.getBytes().length + 2;
-                }
-
-                writer.println(line);
-
-                read += readLen;
-                notifyProgress(readLen);
-            }
-        }else{
-            BufferedInputStream in = new BufferedInputStream(inputStream);
-            BufferedOutputStream out = new BufferedOutputStream(outputStream);
-
-            int buffer = Constants.KB;
-            if(download)
-                buffer = buffer + 16;
-
-            byte[] bytes = new byte[ Constants.KB + 16];
-            int readLen, writeLen, len;
-            while ((readLen = in.read(bytes, 0,buffer)) != -1) {
-                if (stop || Constants.STATE_PAUSE.equals(task.getState()))
-                    break;
-
-                len = readLen;
-                if(download && ftpClient.isSecureMode()){
-                    writeLen = ftpClient.decodeBytes(bytes, readLen);
-                    md5.update(bytes, 0, writeLen);
-                    len = writeLen;
-                }else if(ftpClient.isSecureMode()){
-                    md5.update(bytes, 0, readLen);
-                    bytes = ftpClient.encodeBytes(bytes, readLen);
-                    int fill = 16 - (readLen % 16);
-                    writeLen = readLen + fill;
-                }else{
-                    writeLen = readLen;
-                }
-
-                out.write(bytes, 0, writeLen);
-
-                read += len;
-                notifyProgress(len);
-            }
-            out.flush();
+    private void transfer(OutputStream outputStream, InputStream inputStream, boolean download, File file, long read)
+            throws IOException, FTPException {
+        if (DataType.ASCII == ftpClient.getDataType()) {
+            transferASCII(outputStream, inputStream, download, read);
+            return;
         }
-        return read;
+
+        if (ftpClient.isSecureMode()) {
+            transferEncrypted(outputStream, inputStream, download, file, read);
+            return;
+        }
+
+        BufferedInputStream in = new BufferedInputStream(inputStream);
+        BufferedOutputStream out = new BufferedOutputStream(outputStream);
+        byte[] bytes = new byte[Constants.KB];
+        int len;
+        while ((len = in.read(bytes)) != -1) {
+            if (stop || Constants.STATE_PAUSE.equals(task.getState()))
+                throw new FTPException();
+
+            out.write(bytes, 0, len);
+            read += len;
+            notifyProgress(len);
+        }
+        out.flush();
+        outputStream.close();
+        inputStream.close();
+    }
+
+    private void transferASCII(OutputStream outputStream, InputStream inputStream, boolean download, long read) throws FTPException, IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        PrintWriter writer = new PrintWriter(outputStream, true);
+        String line;
+        int readLen;
+        int eol = Constants.EOL.length;
+        while ((line = reader.readLine()) != null) {
+            if (stop || Constants.STATE_PAUSE.equals(task.getState()))
+                throw new FTPException();
+
+            if (download && ftpClient.isSecureMode()) {
+                line = ftpClient.decodeMessage(line);
+                readLen = line.getBytes().length + eol;
+            } else if (ftpClient.isSecureMode()) {
+                readLen = line.getBytes().length + eol;
+                line = ftpClient.encodeMessage(line);
+            } else {
+                readLen = line.getBytes().length + eol;
+            }
+
+            writer.println(line);
+
+            read += readLen;
+            notifyProgress(readLen);
+        }
+        reader.close();
+        writer.close();
+    }
+
+    private void transferEncrypted(OutputStream outputStream, InputStream inputStream, boolean download, File file, long read)
+            throws IOException, FTPException {
+
+        DataInputStream in = new DataInputStream(inputStream);
+        DataOutputStream out = new DataOutputStream(outputStream);
+        if (!download) {
+            out.writeUTF(ftpClient.encodeMessage(md5.getFileMd5(file)));
+        } else {
+            serverMd5 = ftpClient.decodeMessage(in.readUTF());
+        }
+
+        int buffer = Constants.KB;
+        if (download)
+            buffer = buffer + 16;
+
+        byte[] bytes = new byte[Constants.KB + 16];
+        int readLen, writeLen, len;
+        while ((readLen = in.read(bytes, 0, buffer)) != -1) {
+            if (stop || Constants.STATE_PAUSE.equals(task.getState()))
+                throw new FTPException();
+
+            len = readLen;
+            if (download) {
+                writeLen = ftpClient.decodeBytes(bytes, readLen);
+                len = writeLen;
+            } else {
+                bytes = ftpClient.encodeBytes(bytes, readLen);
+                int fill = 16 - (readLen % 16);
+                writeLen = readLen + fill;
+            }
+
+            out.write(bytes, 0, writeLen);
+
+            read += len;
+            notifyProgress(len);
+        }
+        out.flush();
+        out.close();
+        in.close();
     }
 
     private void updateState(boolean result) {
+        if (Constants.STATE_PAUSE.equals(task.getState())) {
+            queue.offer(task);
+            return;
+        }
+
         if (result) {
             if (task.getSize() == 0) {
                 task.setMaxValue(1);
                 task.setProgress(1);
                 listener.notifyProgress(task);
             }
+            task.setProgress(task.getSize());
             task.setState(Constants.STATE_SUCCESS);
         } else {
-            if (Constants.STATE_PAUSE.equals(task.getState())) {
-                queue.offer(task);
-                return;
-            }
             task.setState(Constants.STATE_FAILURE);
+            if (task.isDownload())
+                task.getFile().delete();
         }
         listener.afterTransfer(task);
     }
@@ -264,5 +301,4 @@ public class TransferThread extends Thread {
     public void close() {
         stop = true;
     }
-    // TODO: 5/17/2019 server new thread to transfer
 }

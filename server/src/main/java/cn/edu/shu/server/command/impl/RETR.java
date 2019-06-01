@@ -5,7 +5,6 @@
 
 package cn.edu.shu.server.command.impl;
 
-import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.server.command.Command;
 import cn.edu.shu.server.ftp.DataConnection;
@@ -13,7 +12,8 @@ import cn.edu.shu.server.ftp.FTPRequest;
 import cn.edu.shu.server.ftp.FTPSession;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 public class RETR implements Command {
 
@@ -43,57 +43,28 @@ public class RETR implements Command {
             return;
         }
 
-        if (session.getDataConnection().getSocketAddress() == null) {
+        if (session.getDataConnection() == null) {
             session.println(FTPReplyCode.BAD_SEQUENCE.getReply());
             return;
         }
         session.println(FTPReplyCode.FILE_STATUS_OK.getReply().replaceFirst("\\?", current));
 
         DataConnection dataConnection = session.getDataConnection();
+
         try {
-            long len = session.getOffset();
-            InputStream inputStream;
+            dataConnection.openConnection();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
+            return;
+        }
 
-            if (session.getDataType() == DataType.ASCII) {
-                long offset = 0L;
-                inputStream = new BufferedInputStream(new FileInputStream(file));
-                while (offset++ < len) {
-                    int c;
-                    if ((c = inputStream.read()) == -1) {
-                        throw new IOException("Cannot skip");
-                    }
-                    if (c == '\n') {
-                        ++offset;
-                    }
-                }
-            } else {
-                RandomAccessFile raf = new RandomAccessFile(file, "r");
-                raf.seek(len);
-                inputStream = new FileInputStream(raf.getFD());
-            }
+        try {
+            dataConnection.transferToClient(file);
 
-            try {
-                dataConnection.openConnection();
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
-                return;
-            }
-
-            String md5 = dataConnection.transferToClient(session, inputStream);
-            if(session.isSecureMode()) {
-                session.println(FTPReplyCode.CLOSING_DATA_CONNECTION + " " + md5);
-                return;
-            }
-
-            inputStream.close();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
-            return;
-        }finally {
-            dataConnection.closeConnection();
         }
-        session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));
     }
 }

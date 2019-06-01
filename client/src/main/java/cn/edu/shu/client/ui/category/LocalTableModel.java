@@ -133,6 +133,8 @@ public class LocalTableModel extends AbstractTableModel {
     }
 
     void removeRows(int[] rows) {
+        if(rows == null || rows.length == 0)
+            return;
         Arrays.sort(rows);
         File[] newFiles = new File[files.length - rows.length];
         int j = 0, k = 0;

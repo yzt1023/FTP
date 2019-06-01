@@ -13,9 +13,7 @@ import cn.edu.shu.server.ftp.FTPSession;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public class APPE implements Command {
 
@@ -37,7 +35,7 @@ public class APPE implements Command {
             return;
         }
 
-        if (session.getDataConnection().getSocketAddress() == null) {
+        if (session.getDataConnection() == null) {
             session.println(FTPReplyCode.BAD_SEQUENCE.getReply());
             return;
         }
@@ -53,43 +51,20 @@ public class APPE implements Command {
         session.println(FTPReplyCode.FILE_STATUS_OK.getReply().replaceFirst("\\?", current));
         DataConnection dataConnection = session.getDataConnection();
 
+
         try {
-            long offset = 0L;
-            if (file.exists())
-                offset = file.length();
-            RandomAccessFile raf = new RandomAccessFile(file, "rw");
-            raf.seek(offset);
+            dataConnection.openConnection();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
+            return;
+        }
 
-            FileOutputStream outputStream = new FileOutputStream(raf.getFD());
-
-            try {
-                dataConnection.openConnection();
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                session.println(FTPReplyCode.CANT_OPEN_DATA_CONNECTION.getReply());
-                return;
-            }
-
-            String md5 = dataConnection.transferFromClient(session, outputStream);
-            if(session.isSecureMode()) {
-                FTPRequest md5Request = new FTPRequest(session.readRequest());
-                String clientMd5 = md5Request.getArgument();
-                if(!clientMd5.equals(md5)) {
-                    session.println(FTPReplyCode.ACTION_ABORTED + " File was modified illegally");
-                    file.delete();
-                    return;
-                }
-            }
-            outputStream.close();
-            raf.close();
+        try {
+            dataConnection.transferFromClient(file);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
-            return;
-        } finally {
-            dataConnection.closeConnection();
         }
-        session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply().replaceFirst("\\?", current));
-
     }
 }

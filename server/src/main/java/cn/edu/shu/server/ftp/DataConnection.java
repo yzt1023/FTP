@@ -7,6 +7,7 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.encryption.MD5;
+import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.util.CommonUtils;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.server.config.SystemConfig;
@@ -22,12 +23,24 @@ import java.util.List;
 public class DataConnection {
 
     private Socket dataSocket;
+    private FTPSession session;
+    private boolean download;
+    private InputStream inputStream;
+    private OutputStream outputStream;
+    private File file;
+    private RandomAccessFile raf;
+
     private ServerSocket serverSocket;
     private boolean passiveMode;
     private InetSocketAddress socketAddress;
     private Logger logger = Logger.getLogger(getClass());
     private CommonUtils utils = CommonUtils.getInstance();
     private MD5 md5 = new MD5();
+    private String clientMd5;
+
+    DataConnection(FTPSession session) {
+        this.session = session;
+    }
 
     public void initActiveDataConnection(InetSocketAddress socketAddress) {
         closeConnection();
@@ -54,6 +67,8 @@ public class DataConnection {
     public void openConnection() throws Exception {
         if (passiveMode) {
             dataSocket = serverSocket.accept();
+            serverSocket.close();
+            serverSocket = null;
         } else {
             dataSocket = new Socket();
             dataSocket.bind(new InetSocketAddress(Constants.DEFAULT_DATA_PORT));
@@ -66,24 +81,25 @@ public class DataConnection {
             if (dataSocket != null)
                 dataSocket.close();
             dataSocket = null;
-            if (serverSocket != null)
-                serverSocket.close();
-            serverSocket = null;
+
+            if (inputStream != null)
+                inputStream.close();
+            inputStream = null;
+
+            if (outputStream != null)
+                outputStream.close();
+            outputStream = null;
+
+            if (raf != null)
+                raf.close();
+            raf = null;
+
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    public String transferToClient(FTPSession session, InputStream in) throws IOException {
-        OutputStream out = dataSocket.getOutputStream();
-        transfer(session, true, in, out);
-        out.close();
-        if(session.isSecureMode())
-            return md5.getString();
-        return null;
-    }
-
-    public void transferToClient(FTPSession session, List<String> files) throws IOException {
+    public void transferToClient(List<String> files) throws IOException {
         OutputStream out = dataSocket.getOutputStream();
         OutputStreamWriter writer = new OutputStreamWriter(out, session.getEncoding());
         for (String file : files) {
@@ -95,61 +111,115 @@ public class DataConnection {
         writer.close();
     }
 
-    public String transferFromClient(FTPSession session, OutputStream out) throws IOException {
-        InputStream in = dataSocket.getInputStream();
-        transfer(session, false, in, out);
-        in.close();
-        if(session.isSecureMode())
-            return md5.getString();
+    public void transferToClient(File file) throws IOException {
+        long offset = session.getOffset();
+        raf = new RandomAccessFile(file, "r");
+        raf.seek(offset);
 
-        return null;
+        inputStream = new FileInputStream(raf.getFD());
+        outputStream = dataSocket.getOutputStream();
+        download = true;
+        this.file = file;
+        startTransfer();
     }
 
-    private void transfer(FTPSession session, boolean isWrite, InputStream in, OutputStream out) throws IOException {
+    public void transferFromClient(File file) throws IOException {
+        long offset = 0L;
+        if (file.exists())
+            offset = file.length();
+        raf = new RandomAccessFile(file, "rw");
+        raf.seek(offset);
+
+        outputStream = new FileOutputStream(raf.getFD());
+        inputStream = dataSocket.getInputStream();
+        download = false;
+        this.file = file;
+        startTransfer();
+    }
+
+    private void transferEncrypted() throws IOException {
         int buff = Constants.KB;
-        if (!isWrite)
+        if (!download)
             buff += 16;
 
-        md5.initial();
-        if(session.getDataType() == DataType.ASCII){
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            PrintWriter writer = new PrintWriter(out, true);
-            String line;
-            while((line = reader.readLine()) != null){
-                if(isWrite && session.isSecureMode()) {
-                    md5.update(line);
-                    line = session.encodeResponse(line);
-                }else if(session.isSecureMode()){
-                    line = session.decodeRequest(line);
-                    md5.update(line);
-                }
+        byte[] bytes = new byte[Constants.KB + 16];
+        DataInputStream in = new DataInputStream(inputStream);
+        DataOutputStream out = new DataOutputStream(outputStream);
+        if (download) {
+            out.writeUTF(session.encodeResponse(md5.getFileMd5(file)));
+        } else {
+            clientMd5 = session.decodeRequest(in.readUTF());
+        }
 
-                writer.println(line);
+        int len;
+        while ((len = in.read(bytes, 0, buff)) != -1) {
+            if (download) {
+                bytes = session.encodeBytes(bytes, len);
+                int fill = 16 - (len % 16);
+                len = len + fill;
+            } else {
+                len = session.decodeBytes(bytes, len);
             }
-        }else{
-            byte[] bytes = new byte[Constants.KB + 16];
-            BufferedInputStream bis = new BufferedInputStream(in);
-            BufferedOutputStream bos = new BufferedOutputStream(out);
-            int len;
-            while ((len = bis.read(bytes, 0, buff)) != -1) {
-                if(isWrite && session.isSecureMode()){
-                    md5.update(bytes, 0, len);
-                    bytes = session.encodeBytes(bytes, len);
-                    int fill = 16 - (len % 16);
-                    len = len + fill;
-                }else if(session.isSecureMode()){
-                    len = session.decodeBytes(bytes, len);
-                    md5.update(bytes, 0, len);
-                }
+            out.write(bytes, 0, len);
+        }
+        out.flush();
 
-                bos.write(bytes, 0, len);
-            }
-            bos.flush();
+        if (!download && !clientMd5.equals(md5.getFileMd5(file))) {
+            session.println(FTPReplyCode.ACTION_ABORTED + " File was modified illegally");
+            raf.close();
+            file.delete();
+        } else {
+            session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply());
         }
     }
 
-    public InetSocketAddress getSocketAddress() {
-        return socketAddress;
+    private void transfer(DataType dataType, boolean secure) throws IOException {
+        if (dataType == DataType.ASCII) {
+            transferASCII(secure);
+            return;
+        }
+
+        if (secure) {
+            transferEncrypted();
+            return;
+        }
+
+        BufferedInputStream bis = new BufferedInputStream(inputStream);
+        BufferedOutputStream bos = new BufferedOutputStream(outputStream);
+        int len;
+        byte[] bytes = new byte[Constants.KB];
+        while ((len = bis.read(bytes)) != -1) {
+            bos.write(bytes, 0, len);
+        }
+        bos.flush();
+        session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply());
     }
 
+    private void transferASCII(boolean secure) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        PrintWriter writer = new PrintWriter(outputStream, true);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (download && secure)
+                line = session.encodeResponse(line);
+            else if (secure) {
+                line = session.decodeRequest(line);
+            }
+            writer.println(line);
+        }
+        session.println(FTPReplyCode.CLOSING_DATA_CONNECTION.getReply());
+    }
+
+    private void startTransfer() {
+        new Thread(() -> {
+            try {
+                transfer(session.getDataType(), session.isSecureMode());
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());
+            } finally {
+                closeConnection();
+            }
+        }).start();
+    }
 }

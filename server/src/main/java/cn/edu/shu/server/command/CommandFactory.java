@@ -35,7 +35,6 @@ public class CommandFactory {
         commandMap.put(FTPCommand.REG, new REG());
         commandMap.put(FTPCommand.REST, new REST());
         commandMap.put(FTPCommand.SIZE, new SIZE());
-        commandMap.put(FTPCommand.STOR, new STOR());
         commandMap.put(FTPCommand.TYPE, new TYPE());
         commandMap.put(FTPCommand.USER, new USER());
     }

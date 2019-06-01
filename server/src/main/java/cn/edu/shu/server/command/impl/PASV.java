@@ -27,7 +27,7 @@ public class PASV implements Command {
             return;
         }
 
-        DataConnection dataConnection = session.getDataConnection();
+        DataConnection dataConnection = session.createDataConnection();
         InetSocketAddress socketAddress = dataConnection.initPassiveDataConnection(session.getControlAddress());
 
         if(socketAddress == null){

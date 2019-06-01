@@ -277,28 +277,6 @@ public class FTPClient {
      * @param filename the name of file under the current working dir
      * @return output stream if upload successfully, otherwise null
      */
-    public synchronized OutputStream getStorStream(String filename)
-            throws ConnectionException, FTPException, IOException, NoPermissionException {
-        if (!user.isWritable())
-            throw new NoPermissionException();
-
-        Socket socket = establishDataConnection(FTPCommand.TYPE + " " + dataType.toString());
-        readReply();
-
-        if (restartOffset > 0L) {
-            executeCommand(FTPCommand.REST + " " + restartOffset);
-            if (!FTPReplyCode.find(getReplyCode()).isInfoRequested())
-                throw new FTPException(response);
-        }
-
-        executeCommand(FTPCommand.STOR + " " + filename);
-        if (!FTPReplyCode.find(getReplyCode()).isReady()) {
-            throw new FTPException(response);
-        }
-
-        return socket.getOutputStream();
-    }
-
     public synchronized OutputStream getAppeStream(String filename)
             throws ConnectionException, FTPException, IOException, NoPermissionException {
         if (!user.isWritable())

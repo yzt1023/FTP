@@ -37,7 +37,7 @@ public class MLSD implements Command {
             return;
         }
 
-        if (session.getDataConnection().getSocketAddress() == null) {
+        if (session.getDataConnection() == null) {
             session.println(FTPReplyCode.BAD_SEQUENCE.getReply());
             return;
         }
@@ -71,7 +71,7 @@ public class MLSD implements Command {
         }
 
         try {
-            dataConnection.transferToClient(session, files);
+            dataConnection.transferToClient(files);
         }catch (IOException e){
             logger.error(e.getMessage(), e);
             session.println(FTPReplyCode.CONNECTION_CLOSED.getReply());

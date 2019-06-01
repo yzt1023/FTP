@@ -20,7 +20,7 @@ public enum FTPReplyCode {
     SERVICE_READY(220, "Service ready for new user"),
     SERVICE_CLOSING(221, "Service closing control connection"),
     DATA_CONNECTION_OPEN(225, "Data connection open; no transfer in progress"),
-    CLOSING_DATA_CONNECTION(226, "Successfully transferred \"?\""),
+    CLOSING_DATA_CONNECTION(226, "Successfully transferred"),
     ENTERING_PASSIVE_MODE(227, "Entering Passive Mode "),
     LOGGED_IN(230, "User logged in"),
     FILE_ACTION_OK(250, "Requested file action okay, completed"),

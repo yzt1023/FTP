@@ -74,7 +74,7 @@ public class MainFrame extends JFrame implements TransferListener, ConnectListen
         msgPane = new MsgPane();
         taskPane = new TaskPane();
         tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("connect println", msgPane);
+        tabbedPane.addTab("connect logs", msgPane);
         tabbedPane.addTab("transfer process", taskPane);
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 

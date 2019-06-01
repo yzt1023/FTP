@@ -40,7 +40,6 @@ public class FTPSession {
         this.rootPath = controlConnection.getRootPath();
         this.userDao = new UserDao();
         this.fileSystemView = FileSystemView.getFileSystemView();
-        this.dataConnection = new DataConnection();
         this.securityUtils = SecurityUtils.getInstance();
     }
 
@@ -116,6 +115,17 @@ public class FTPSession {
 
     public DataConnection getDataConnection() {
         return dataConnection;
+    }
+
+    public DataConnection createDataConnection(){
+        dataConnection = new DataConnection(this);
+        return dataConnection;
+    }
+
+    public void closeDataConnection(){
+        if(dataConnection != null)
+            dataConnection.closeConnection();
+        dataConnection = null;
     }
 
     public String getAbsolutePath(String arg) {

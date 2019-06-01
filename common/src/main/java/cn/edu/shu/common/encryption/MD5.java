@@ -6,6 +6,13 @@
 
 package cn.edu.shu.common.encryption;
 
+import cn.edu.shu.common.util.Constants;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import static java.lang.Math.abs;
 import static java.lang.Math.sin;
 
@@ -184,5 +191,17 @@ public class MD5 {
     public String getMD5(String message){
         byte[] bytes = message.getBytes();
         return getMD5(bytes, 0, bytes.length);
+    }
+
+    public String getFileMd5(File file) throws IOException {
+        initial();
+        BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+        int len;
+        byte[] bytes = new byte[4 * Constants.KB];
+        while((len = inputStream.read(bytes)) != -1){
+            update(bytes, 0, len);
+        }
+        inputStream.close();
+        return getString();
     }
 }
