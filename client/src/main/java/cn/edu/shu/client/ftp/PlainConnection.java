@@ -21,14 +21,17 @@ public class PlainConnection {
     private Socket socket;
     private FTPClient client;
     private MsgListener listener;
+    private boolean closed;
 
     PlainConnection(FTPClient client) {
         this.client = client;
         this.listener = client.getListener();
+        closed = false;
     }
 
     public void connect(String host, int port) throws ConnectionException {
         try {
+            listener.println("Connect to server...");
             socket = new Socket(host, port);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), client.getEncoding()));
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), client.getEncoding()), true);
@@ -41,6 +44,9 @@ public class PlainConnection {
     }
 
     String readReply() throws ConnectionException {
+        if(reader == null)
+            return null;
+
         try {
             String line = reader.readLine();
             if (line == null)
@@ -72,6 +78,9 @@ public class PlainConnection {
     }
 
     void sendCommand(String command) throws ConnectionException {
+        if(writer == null)
+            return;
+
         if (command.startsWith(FTPCommand.PASS) || command.startsWith(FTPCommand.REG)) {
             String temp = command.substring(0, command.lastIndexOf(" "));
             listener.println(temp + " ******");
@@ -102,5 +111,10 @@ public class PlainConnection {
         writer = null;
         reader = null;
         socket = null;
+        closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }

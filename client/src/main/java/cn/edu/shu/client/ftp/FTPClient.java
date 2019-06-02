@@ -47,7 +47,6 @@ public class FTPClient {
 
     public FTPClient(MsgListener msgListener) {
         this.config = SystemConfig.getInstance();
-
         this.msgListener = msgListener;
         this.restartOffset = 0L;
         this.encoding = config.getEncoding();
@@ -78,7 +77,7 @@ public class FTPClient {
     }
 
     private synchronized void reLogin(String username, String password) throws ConnectionException, FTPException {
-        if (controlConnection == null)
+        if (controlConnection == null || controlConnection.isClosed())
             return;
 
         executeCommand(FTPCommand.USER + " " + username);
@@ -100,7 +99,7 @@ public class FTPClient {
     }
 
     public synchronized void register(String username, String password) throws ConnectionException, FTPException {
-        if (controlConnection == null)
+        if (controlConnection == null || controlConnection.isClosed())
             throw new FTPException(Constants.CONNECT_FIRST);
 
         password = SecurityUtils.getMd5(password);
@@ -120,7 +119,7 @@ public class FTPClient {
     }
 
     public synchronized void sendCommand(String command) throws ConnectionException {
-        if (controlConnection == null)
+        if (controlConnection == null || controlConnection.isClosed())
             return;
 
         try {
@@ -136,7 +135,7 @@ public class FTPClient {
     }
 
     public void disconnect() throws ConnectionException, IOException {
-        if (controlConnection == null)
+        if (controlConnection == null || controlConnection.isClosed())
             return;
 
         executeCommand(FTPCommand.QUIT);
