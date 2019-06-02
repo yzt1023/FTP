@@ -65,7 +65,7 @@ public interface Constants {
     String CLEAR_FAILED = "Tasks cannot be emptied because there are some outstanding tasks!";
     // settings
     String EMPTY_INPUT = "Parameters cannot be empty! Please check your input!";
-    String CHARSET_NOT_EXISTS = "The charset inputted is not exists or not supported!";
+    String CHARSET_NOT_EXISTS = "The charset inputted does not exist or is not supported!";
     String NUMBER_INCORRECT = "The number format is incorrect!";
     String PORT_INCORRECT = "Incorrect port range!";
     String TIME_INCORRECT = "Incorrect timeout!";

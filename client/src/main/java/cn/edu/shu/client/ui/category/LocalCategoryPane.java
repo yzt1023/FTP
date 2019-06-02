@@ -77,13 +77,13 @@ public class LocalCategoryPane extends CategoryPane {
 
     @Override
     void reloadChildrenNode(FileTreeNode node) {
-        root.removeAllChildren();
+        node.removeAllChildren();
         loadChildrenNode(node);
     }
 
     @Override
     void showMenuItems(boolean rowSelected) {
-        if(!canUpload)
+        if (!canUpload)
             uploadItem.setEnabled(false);
         else
             uploadItem.setEnabled(rowSelected);
@@ -259,12 +259,12 @@ public class LocalCategoryPane extends CategoryPane {
         return currentFile;
     }
 
-    public void afterConnect(boolean isWritable){
-        if(isWritable)
+    public void afterConnect(boolean isWritable) {
+        if (isWritable)
             canUpload = true;
     }
 
-    public void afterDisconnect(){
+    public void afterDisconnect() {
         canUpload = false;
     }
 }

@@ -8,7 +8,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -147,10 +146,10 @@ public class CommonUtils {
         return icon;
     }
 
-    public String getAboutMessage(){
+    public String getAboutMessage() {
         Calendar date = Calendar.getInstance();
         String year = String.valueOf(date.get(Calendar.YEAR));
-        String message = "Copyright(C) 2018 - " + year + " All Rights Reserved.\nWritten by: Skye You";
+        String message = "Copyright(C) 2018 - " + year + " All Rights Reserved.\nWritten by: Skye You\n";
         message += "Email: yzt1023@126.com";
         return message;
     }
