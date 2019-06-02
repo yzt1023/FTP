@@ -23,6 +23,7 @@ public class RemoteTableModel extends AbstractTableModel {
     private String[] columns = {"", "Name", "Date Modified", "Type", "Size"};
     private RemoteCategoryPane categoryPane;
     private TransferUtils transferUtils;
+    private CommonUtils utils = CommonUtils.getInstance();
 
     RemoteTableModel(RemoteCategoryPane categoryPane) {
         this.files = new ArrayList<>();
@@ -49,7 +50,7 @@ public class RemoteTableModel extends AbstractTableModel {
             case 1:
                 return file.getName();
             case 2:
-                return file.getLastChanged();
+                return utils.formatTime(file.getLastChanged());
             case 3:
                 return file.getType();
             case 4:

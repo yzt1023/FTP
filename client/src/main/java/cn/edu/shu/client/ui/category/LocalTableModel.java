@@ -24,6 +24,7 @@ public class LocalTableModel extends AbstractTableModel {
     private String[] columns = {"", "Name", "Date Modified", "Type", "Size"};
     private FileSystemView fileSystemView;
     private TransferUtils transferUtils;
+    private CommonUtils utils = CommonUtils.getInstance();
 
     LocalTableModel() {
         fileSystemView = FileSystemView.getFileSystemView();
@@ -51,7 +52,7 @@ public class LocalTableModel extends AbstractTableModel {
                 return fileSystemView.getSystemDisplayName(file);
             case 2:
                 Date date = new Date(file.lastModified());
-                return DateFormat.getDateTimeInstance().format(date);
+                return utils.formatTime(date);
             case 3:
                 return fileSystemView.getSystemTypeDescription(file);
             case 4:

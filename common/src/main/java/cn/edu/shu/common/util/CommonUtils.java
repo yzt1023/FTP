@@ -78,6 +78,11 @@ public class CommonUtils {
         return format.format(date);
     }
 
+    public String formatTime(Date date){
+        SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        return format.format(date);
+    }
+
     public Date parseDate(String str) {
         SimpleDateFormat format = new SimpleDateFormat(Constants.DATE_PATTERN);
         try {
