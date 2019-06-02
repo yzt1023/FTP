@@ -66,7 +66,7 @@ class RegisterDialog extends JDialog {
         txtUsername = new JTextField();
         lblPassword = new JLabel("Password: ");
         txtPassword = new JPasswordField();
-        lblConfirmPwd = new JLabel("Confirm Password: ");
+        lblConfirmPwd = new JLabel("Confirm password: ");
         txtConfirmPwd = new JPasswordField();
         btnSubmit = new JButton("Submit");
         btnReset = new JButton("Reset");
@@ -153,85 +153,52 @@ class RegisterDialog extends JDialog {
     }
 
     private void setGroupLayout() {
-        GroupLayout groupLayout = new GroupLayout(contentPane);
-        contentPane.setLayout(groupLayout);
+        GroupLayout layout = new GroupLayout(contentPane);
+        contentPane.setLayout(layout);
 
-        GroupLayout.SequentialGroup hostGroup = groupLayout.createSequentialGroup();
-        hostGroup.addGap(60);
-        hostGroup.addComponent(lblHost);
-        hostGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        hostGroup.addComponent(txtHost, GroupLayout.PREFERRED_SIZE, 160, GroupLayout.PREFERRED_SIZE);
-        hostGroup.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED);
-        hostGroup.addComponent(lblPort);
-        hostGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        hostGroup.addComponent(txtPort, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE);
+        GroupLayout.ParallelGroup lblGroup = layout.createParallelGroup(GroupLayout.Alignment.TRAILING);
+        lblGroup.addComponent(lblHost);
+        lblGroup.addComponent(lblPort);
+        lblGroup.addComponent(lblUsername);
+        lblGroup.addComponent(lblPassword);
+        lblGroup.addComponent(lblConfirmPwd);
 
-        GroupLayout.SequentialGroup usernameGroup = groupLayout.createSequentialGroup();
-        usernameGroup.addGap(60);
-        usernameGroup.addComponent(lblUsername);
-        usernameGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        usernameGroup.addComponent(txtUsername, GroupLayout.PREFERRED_SIZE, 280, GroupLayout.PREFERRED_SIZE);
+        GroupLayout.ParallelGroup txtGroup = layout.createParallelGroup();
+        txtGroup.addComponent(txtHost, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE);
+        txtGroup.addComponent(txtPort, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE);
+        txtGroup.addComponent(txtUsername, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE);
+        txtGroup.addComponent(txtPassword, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE);
+        txtGroup.addComponent(txtConfirmPwd, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE);
 
-        GroupLayout.SequentialGroup passwordGroup = groupLayout.createSequentialGroup();
-        passwordGroup.addGap(60);
-        passwordGroup.addComponent(lblPassword);
-        passwordGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        passwordGroup.addComponent(txtPassword, GroupLayout.PREFERRED_SIZE, 280, GroupLayout.PREFERRED_SIZE);
+        GroupLayout.SequentialGroup btnGroup = layout.createSequentialGroup();
+        btnGroup.addGap(120);
+        btnGroup.addComponent(btnSubmit);
+        btnGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        btnGroup.addComponent(btnReset);
+        btnGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        btnGroup.addComponent(btnCancel);
 
-        GroupLayout.SequentialGroup confirmPwdGroup = groupLayout.createSequentialGroup();
-        confirmPwdGroup.addGap(60);
-        confirmPwdGroup.addComponent(lblConfirmPwd);
-        confirmPwdGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        confirmPwdGroup.addComponent(txtConfirmPwd, GroupLayout.PREFERRED_SIZE, 208, GroupLayout.PREFERRED_SIZE);
+        GroupLayout.ParallelGroup horizontal = layout.createParallelGroup();
+        horizontal.addGroup(layout.createSequentialGroup().addGap(180).addComponent(lblTitle));
+        horizontal.addGroup(layout.createSequentialGroup().addGap(60).addGroup(lblGroup).addGroup(txtGroup));
+        horizontal.addGroup(btnGroup);
+        layout.setHorizontalGroup(horizontal);
 
-        GroupLayout.SequentialGroup buttonGroup = groupLayout.createSequentialGroup();
-        buttonGroup.addGap(120);
-        buttonGroup.addComponent(btnSubmit);
-        buttonGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        buttonGroup.addComponent(btnReset);
-        buttonGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        buttonGroup.addComponent(btnCancel);
-
-        GroupLayout.ParallelGroup horizontalGroup = groupLayout.createParallelGroup();
-        horizontalGroup.addGroup(groupLayout.createSequentialGroup().addGap(180).addComponent(lblTitle));
-        horizontalGroup.addGroup(hostGroup);
-        horizontalGroup.addGroup(usernameGroup);
-        horizontalGroup.addGroup(passwordGroup);
-        horizontalGroup.addGroup(confirmPwdGroup);
-        horizontalGroup.addGroup(buttonGroup);
-
-        GroupLayout.ParallelGroup hostGroup1 = groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE);
-        hostGroup1.addComponent(lblHost).addComponent(txtHost);
-        hostGroup1.addComponent(lblPort).addComponent(txtPort);
-
-        GroupLayout.ParallelGroup usernameGroup1 = groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE);
-        usernameGroup1.addComponent(lblUsername).addComponent(txtUsername);
-
-        GroupLayout.ParallelGroup passwordGroup1 = groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE);
-        passwordGroup1.addComponent(lblPassword).addComponent(txtPassword);
-
-        GroupLayout.ParallelGroup confirmPwdGroup1 = groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE);
-        confirmPwdGroup1.addComponent(lblConfirmPwd).addComponent(txtConfirmPwd);
-
-        GroupLayout.ParallelGroup buttonGroup1 = groupLayout.createParallelGroup(GroupLayout.Alignment.BASELINE);
-        buttonGroup1.addComponent(btnSubmit).addComponent(btnReset).addComponent(btnCancel);
-
-        GroupLayout.SequentialGroup verticalGroup = groupLayout.createSequentialGroup();
-        verticalGroup.addGap(40);
-        verticalGroup.addComponent(lblTitle);
-        verticalGroup.addGap(30);
-        verticalGroup.addGroup(hostGroup1);
-        verticalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        verticalGroup.addGroup(usernameGroup1);
-        verticalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        verticalGroup.addGroup(passwordGroup1);
-        verticalGroup.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        verticalGroup.addGroup(confirmPwdGroup1);
-        verticalGroup.addGap(30);
-        verticalGroup.addGroup(buttonGroup1);
-        verticalGroup.addContainerGap();
-
-        groupLayout.setHorizontalGroup(horizontalGroup);
-        groupLayout.setVerticalGroup(verticalGroup);
+        GroupLayout.SequentialGroup vertical = layout.createSequentialGroup();
+        vertical.addGap(30);
+        vertical.addComponent(lblTitle);
+        vertical.addGap(20);
+        vertical.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(lblHost).addComponent(txtHost));
+        vertical.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        vertical.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(lblPort).addComponent(txtPort));
+        vertical.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        vertical.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(lblUsername).addComponent(txtUsername));
+        vertical.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        vertical.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(lblPassword).addComponent(txtPassword));
+        vertical.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        vertical.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(lblConfirmPwd).addComponent(txtConfirmPwd));
+        vertical.addGap(20);
+        vertical.addGroup(layout.createParallelGroup().addComponent(btnSubmit).addComponent(btnReset).addComponent(btnCancel));
+        layout.setVerticalGroup(vertical);
     }
 }
