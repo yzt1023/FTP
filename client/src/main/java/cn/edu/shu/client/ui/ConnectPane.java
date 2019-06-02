@@ -59,7 +59,7 @@ class ConnectPane extends JPanel {
             if (cbAnonymous.isSelected()) {
                 txtUsername.setEnabled(false);
                 txtPwd.setEnabled(false);
-            } else if(!isConnected()) {
+            } else if (!isConnected()) {
                 txtUsername.setEnabled(true);
                 txtPwd.setEnabled(true);
             }
@@ -123,8 +123,8 @@ class ConnectPane extends JPanel {
     }
 
     private void afterDisconnect() {
-        setInputEnabled(true);
         btnConnect.setText(CONNECT);
+        setInputEnabled(true);
         listener.disconnectCompleted();
     }
 
@@ -197,7 +197,7 @@ class ConnectPane extends JPanel {
         cbAnonymous.setEnabled(enabled);
     }
 
-    private boolean isConnected(){
+    private boolean isConnected() {
         return DISCONNECT.equals(btnConnect.getText());
     }
 

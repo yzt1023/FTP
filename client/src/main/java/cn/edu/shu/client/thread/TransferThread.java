@@ -101,14 +101,14 @@ public class TransferThread extends Thread {
 
             try {
                 transfer(out, inputStream, true, file, offset);
-            }catch (Exception e){
+            } catch (Exception e) {
                 inputStream.close();
                 out.close();
                 throw e;
             }
 
             ftpClient.readReply();
-            if(ftpClient.isSecureMode() && DataType.BINARY == ftpClient.getDataType())
+            if (ftpClient.isSecureMode() && DataType.BINARY == ftpClient.getDataType())
                 return serverMd5.equals(md5.getFileMd5(file));
 
             return true;
@@ -148,7 +148,7 @@ public class TransferThread extends Thread {
             InputStream in = new FileInputStream(raf.getFD());
             try {
                 transfer(out, in, false, file, offset);
-            }catch (Exception e) {
+            } catch (Exception e) {
                 in.close();
                 out.close();
                 throw e;

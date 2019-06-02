@@ -80,11 +80,11 @@ class SettingsDialog extends JDialog {
         group.add(rbtnAscii);
         group.add(rbtnBinary);
 
-        if("AUTO".equals(config.getDataType())){
+        if ("AUTO".equals(config.getDataType())) {
             rbtnAuto.setSelected(true);
-        }else if("ASCII".equals(config.getDataType())){
+        } else if ("ASCII".equals(config.getDataType())) {
             rbtnAscii.setSelected(true);
-        }else{
+        } else {
             rbtnBinary.setSelected(true);
         }
 
@@ -110,23 +110,23 @@ class SettingsDialog extends JDialog {
 
         btnRemove.addActionListener(e -> {
             int index = list.getSelectedIndex();
-            if(index == -1){
+            if (index == -1) {
                 MessageUtils.showInfoMessage(Constants.NO_ITEM_SELECTED);
-            }else if(listModel.removeSuffix(index)){
+            } else if (listModel.removeSuffix(index)) {
                 MessageUtils.showInfoMessage(Constants.REMOVE_SUCCEED);
-            }else{
+            } else {
                 MessageUtils.showInfoMessage(Constants.REMOVE_FAILED);
             }
         });
 
         btnAdd.addActionListener(e -> {
             String suffix = txtFile.getText();
-            if(suffix.isEmpty()){
+            if (suffix.isEmpty()) {
                 MessageUtils.showInfoMessage(Constants.EMPTY_INPUT);
-            }else if(listModel.addSuffix(suffix)){
+            } else if (listModel.addSuffix(suffix)) {
                 MessageUtils.showInfoMessage(Constants.ADD_SUCCEED);
                 txtFile.setText("");
-            }else{
+            } else {
                 MessageUtils.showInfoMessage(Constants.ADD_FAILED);
             }
         });

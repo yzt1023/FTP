@@ -16,9 +16,9 @@ import java.net.Socket;
 
 public class PlainConnection {
 
-    private Socket socket;
     BufferedReader reader;
     PrintWriter writer;
+    private Socket socket;
     private FTPClient client;
     private MsgListener listener;
 
@@ -67,12 +67,12 @@ public class PlainConnection {
         }
     }
 
-    public String decodeReply(String reply){
+    public String decodeReply(String reply) {
         return reply;
     }
 
     void sendCommand(String command) throws ConnectionException {
-        if (command.startsWith(FTPCommand.PASS) || command.startsWith(FTPCommand.PASS)) {
+        if (command.startsWith(FTPCommand.PASS) || command.startsWith(FTPCommand.REG)) {
             String temp = command.substring(0, command.lastIndexOf(" "));
             listener.println(temp + " ******");
         } else
@@ -84,7 +84,7 @@ public class PlainConnection {
             throw new ConnectionException(Constants.SEND_COMMAND_ERROR);
     }
 
-    public String encodeCommand(String command){
+    public String encodeCommand(String command) {
         return command;
     }
 
