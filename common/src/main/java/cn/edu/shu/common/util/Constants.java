@@ -11,8 +11,8 @@ public interface Constants {
     byte[] EOL = LINE_SEPARATOR.getBytes();
     String NET_EOL = "\r\n";
     String ANONYMOUS_USER = "anonymous";
-    int DEFAULT_CONTROL_PORT = 2121;
-    int DEFAULT_DATA_PORT = 2020;
+    int DEFAULT_CONTROL_PORT = 21;
+    int DEFAULT_DATA_PORT = 20;
     String DATE_PATTERN = "yyyyMMddHHmm";
     String KEY_MODIFY = "modify=";
     String KEY_SIZE = "size=";
