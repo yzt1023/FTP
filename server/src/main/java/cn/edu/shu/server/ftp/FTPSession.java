@@ -7,7 +7,6 @@ package cn.edu.shu.server.ftp;
 
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
-import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.SecurityUtils;
 import cn.edu.shu.server.db.UserDao;
@@ -117,13 +116,13 @@ public class FTPSession {
         return dataConnection;
     }
 
-    public DataConnection createDataConnection(){
+    public DataConnection createDataConnection() {
         dataConnection = new DataConnection(this);
         return dataConnection;
     }
 
-    public void closeDataConnection(){
-        if(dataConnection != null)
+    public void closeDataConnection() {
+        if (dataConnection != null)
             dataConnection.closeConnection();
         dataConnection = null;
     }
@@ -178,10 +177,6 @@ public class FTPSession {
         this.clientKey = clientKey;
     }
 
-    public SecurityUtils getSecurityUtils() {
-        return securityUtils;
-    }
-
     public void generateKey() {
         serverKey = securityUtils.generateKey();
     }
@@ -202,7 +197,4 @@ public class FTPSession {
         return securityUtils.encrypt(bytes, len, serverKey.getBytes());
     }
 
-    public MD5 getMd5(){
-        return securityUtils.getMd5();
-    }
 }

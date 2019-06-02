@@ -8,6 +8,7 @@ package cn.edu.shu.server.ui.user;
 import cn.edu.shu.common.bean.User;
 import cn.edu.shu.common.util.Constants;
 import cn.edu.shu.common.util.MessageUtils;
+import cn.edu.shu.common.util.SecurityUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -63,7 +64,6 @@ public class DetailPane extends JPanel {
                 MessageUtils.showInfoMessage(Constants.SAVE_SUCCEED);
             else
                 MessageUtils.showInfoMessage(Constants.SAVE_FAILED);
-
         });
 
         cbValid.addChangeListener(e -> {
@@ -175,7 +175,10 @@ public class DetailPane extends JPanel {
         if (user == null)
             user = new User();
         user.setUsername(txtUsername.getText());
-        user.setPassword(new String(txtPassword.getPassword()));
+        String pwd = new String(txtPassword.getPassword());
+        if (pwd.length() != 32)
+            pwd = SecurityUtils.getMd5(pwd);
+        user.setPassword(pwd);
         user.setReadable(cbRead.isSelected());
         user.setWritable(cbWrite.isSelected());
         user.setDeleted(cbDelete.isSelected());

@@ -11,7 +11,6 @@ import cn.edu.shu.client.exception.FTPException;
 import cn.edu.shu.client.exception.NoPermissionException;
 import cn.edu.shu.common.bean.DataType;
 import cn.edu.shu.common.bean.User;
-import cn.edu.shu.common.encryption.MD5;
 import cn.edu.shu.common.ftp.FTPCommand;
 import cn.edu.shu.common.ftp.FTPReplyCode;
 import cn.edu.shu.common.log.MsgListener;
@@ -31,7 +30,6 @@ import java.util.List;
 public class FTPClient {
     private CommonUtils utils = CommonUtils.getInstance();
     private SecurityUtils securityUtils;
-    private MD5 md5;
     private String currentPath;
     private boolean passiveMode;
     private boolean secureMode;
@@ -56,7 +54,6 @@ public class FTPClient {
         this.passiveMode = config.isDefaultPassive();
         this.secureMode = config.isDefaultSecure();
         securityUtils = SecurityUtils.getInstance();
-        md5 = securityUtils.getMd5();
     }
 
     private static String getValue(String line, String key) {
@@ -75,8 +72,8 @@ public class FTPClient {
         this.port = port;
     }
 
-    public synchronized  void login(String username, String password) throws ConnectionException, FTPException {
-        password = md5.getMD5(password);
+    public synchronized void login(String username, String password) throws ConnectionException, FTPException {
+        password = SecurityUtils.getMd5(password);
         reLogin(username, password);
     }
 
@@ -106,7 +103,7 @@ public class FTPClient {
         if (controlConnection == null)
             throw new FTPException(Constants.CONNECT_FIRST);
 
-        password = md5.getMD5(password);
+        password = SecurityUtils.getMd5(password);
         executeCommand(FTPCommand.REG + " " + username + " " + password);
         if (!FTPReplyCode.find(getReplyCode()).isOkay())
             throw new FTPException(response);

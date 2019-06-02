@@ -34,7 +34,6 @@ public class REG implements Command {
             return;
         }
 
-        password = session.getMd5().getMD5(password);
         User user = new User(username, password, true, true, true, false);
         userDao.addUser(user);
         session.println(FTPReplyCode.COMMAND_OK.getReply());

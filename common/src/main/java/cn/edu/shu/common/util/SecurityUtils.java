@@ -17,9 +17,9 @@ import java.util.Random;
 public class SecurityUtils {
 
     private static SecurityUtils instance = new SecurityUtils();
+    private static MD5 md5;
     private Logger logger = Logger.getLogger(getClass());
     private AES128 aes128;
-    private MD5 md5;
 
     private SecurityUtils() {
         aes128 = new AES128();
@@ -28,6 +28,10 @@ public class SecurityUtils {
 
     public static SecurityUtils getInstance() {
         return instance;
+    }
+
+    public static String getMd5(String message) {
+        return md5.getMD5(message);
     }
 
     /**
@@ -109,9 +113,4 @@ public class SecurityUtils {
         }
         return key.toString();
     }
-
-    public MD5 getMd5() {
-        return this.md5;
-    }
-
 }
